@@ -32,7 +32,7 @@ const FilterSection = () => {
         <div className="space-y-3">
           <Label className="text-sm font-semibold">Property Type</Label>
           <div className="space-y-2">
-            {["Hotel", "Safari Lodge", "Beach Resort", "Cottage", "Apartment"].map((type) => (
+            {["Hotel", "Apartment", "House", "Villa", "Guesthouse", "Hostel"].map((type) => (
               <div key={type} className="flex items-center space-x-2">
                 <Checkbox id={type} />
                 <label
