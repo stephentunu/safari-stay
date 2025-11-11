@@ -1,58 +1,52 @@
+import { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar";
 import SearchBar from "@/components/SearchBar";
 import PropertyCard from "@/components/PropertyCard";
 import FilterSection from "@/components/FilterSection";
 import heroBg from "@/assets/hero-bg.jpg";
 import property1 from "@/assets/property-1.jpg";
-import property2 from "@/assets/property-2.jpg";
-import property3 from "@/assets/property-3.jpg";
-import property4 from "@/assets/property-4.jpg";
 import { Button } from "@/components/ui/button";
 import { Sparkles, Shield, CreditCard, Headphones } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+
+interface Property {
+  id: string;
+  title: string;
+  location: string;
+  price_per_night: number;
+  images: string[];
+  bedrooms: number;
+  bathrooms: number;
+  max_guests: number;
+}
 
 const Index = () => {
-  const featuredProperties = [
-    {
-      id: 1,
-      image: property1,
-      title: "Diani Beach Oceanfront Resort",
-      location: "Diani Beach, Mombasa",
-      price: 12500,
-      rating: 4.9,
-      reviews: 342,
-      type: "Beach Resort"
-    },
-    {
-      id: 2,
-      image: property2,
-      title: "Maasai Mara Luxury Safari Camp",
-      location: "Maasai Mara, Narok",
-      price: 28000,
-      rating: 5.0,
-      reviews: 189,
-      type: "Safari Lodge"
-    },
-    {
-      id: 3,
-      image: property3,
-      title: "Nairobi Skyline Penthouse",
-      location: "Westlands, Nairobi",
-      price: 15000,
-      rating: 4.8,
-      reviews: 267,
-      type: "Apartment"
-    },
-    {
-      id: 4,
-      image: property4,
-      title: "Kenya Highlands Cottage",
-      location: "Nanyuki, Laikipia",
-      price: 8500,
-      rating: 4.7,
-      reviews: 154,
-      type: "Cottage"
-    },
-  ];
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    fetchProperties();
+  }, []);
+
+  const fetchProperties = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("properties")
+        .select("*")
+        .eq("is_approved", true)
+        .eq("is_active", true)
+        .limit(6);
+
+      if (error) throw error;
+      setProperties(data || []);
+    } catch (error: any) {
+      console.error("Error fetching properties:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -124,25 +118,39 @@ const Index = () => {
             </div>
             
             <div className="lg:col-span-3">
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                {featuredProperties.map((property) => (
-                  <PropertyCard key={property.id} {...property} />
-                ))}
-                {featuredProperties.map((property) => (
-                  <PropertyCard 
-                    key={`duplicate-${property.id}`} 
-                    {...property} 
-                    title={property.title + " - Special Offer"}
-                    price={property.price - 1000}
-                  />
-                ))}
-              </div>
-              
-              <div className="mt-8 text-center">
-                <Button size="lg" variant="outline">
-                  Load More Properties
-                </Button>
-              </div>
+              {loading ? (
+                <div className="text-center py-12">
+                  <p className="text-muted-foreground">Loading properties...</p>
+                </div>
+              ) : properties.length === 0 ? (
+                <div className="text-center py-12">
+                  <p className="text-lg font-medium mb-2">No properties available yet</p>
+                  <p className="text-muted-foreground">Be the first to list your property on McDone!</p>
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    {properties.map((property) => (
+                      <PropertyCard 
+                        key={property.id}
+                        id={property.id}
+                        image={property.images[0] || property1}
+                        title={property.title}
+                        location={property.location}
+                        price={property.price_per_night}
+                        rating={4.5}
+                        reviews={0}
+                      />
+                    ))}
+                  </div>
+                  
+                  <div className="mt-8 text-center">
+                    <Button size="lg" variant="outline">
+                      Load More Properties
+                    </Button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>

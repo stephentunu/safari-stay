@@ -4,16 +4,17 @@ import { Star, MapPin, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface PropertyCardProps {
+  id?: string;
   image: string;
   title: string;
   location: string;
   price: number;
   rating: number;
   reviews: number;
-  type: string;
+  type?: string;
 }
 
-const PropertyCard = ({ image, title, location, price, rating, reviews, type }: PropertyCardProps) => {
+const PropertyCard = ({ id, image, title, location, price, rating, reviews, type = "Property" }: PropertyCardProps) => {
   return (
     <Card className="overflow-hidden group hover:shadow-xl transition-all duration-300 cursor-pointer border-border">
       <div className="relative aspect-[4/3] overflow-hidden">
