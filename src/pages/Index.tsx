@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import SearchBar from "@/components/SearchBar";
 import PropertyCard from "@/components/PropertyCard";
@@ -25,6 +26,7 @@ const Index = () => {
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchProperties();
@@ -165,7 +167,7 @@ const Index = () => {
           <p className="text-lg mb-8 text-primary-foreground/90 max-w-2xl mx-auto">
             List your property and reach thousands of travelers across Kenya and beyond.
           </p>
-          <Button size="lg" variant="accent" className="text-lg px-8">
+          <Button size="lg" variant="accent" className="text-lg px-8" onClick={() => navigate("/auth")}>
             Become a Host Today
           </Button>
         </div>
