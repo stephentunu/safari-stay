@@ -167,7 +167,7 @@ const Index = () => {
           <p className="text-lg mb-8 text-primary-foreground/90 max-w-2xl mx-auto">
             List your property and reach thousands of travelers across Kenya and beyond.
           </p>
-          <Button size="lg" variant="accent" className="text-lg px-8" onClick={() => navigate("/auth")}>
+          <Button size="lg" variant="accent" className="text-lg px-8" onClick={() => navigate("/add-property")}>
             Become a Host Today
           </Button>
         </div>
