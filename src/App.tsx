@@ -8,6 +8,7 @@ import Auth from "./pages/Auth";
 import AddProperty from "./pages/AddProperty";
 import PropertyDetails from "./pages/PropertyDetails";
 import Receipt from "./pages/Receipt";
+import Experiences from "./pages/Experiences";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +25,7 @@ const App = () => (
           <Route path="/add-property" element={<AddProperty />} />
           <Route path="/property/:id" element={<PropertyDetails />} />
           <Route path="/receipt/:bookingId" element={<Receipt />} />
+          <Route path="/experiences" element={<Experiences />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

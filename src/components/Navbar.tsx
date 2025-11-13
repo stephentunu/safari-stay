@@ -33,8 +33,9 @@ const Navbar = () => {
               Stays
             </NavLink>
             <NavLink 
-              to="/" 
+              to="/experiences" 
               className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+              activeClassName="text-primary"
             >
               Experiences
             </NavLink>
@@ -80,8 +81,9 @@ const Navbar = () => {
                   Stays
                 </NavLink>
                 <NavLink 
-                  to="/" 
+                  to="/experiences" 
                   className="text-base font-medium text-muted-foreground hover:text-primary transition-colors py-2"
+                  activeClassName="text-primary"
                 >
                   Experiences
                 </NavLink>
