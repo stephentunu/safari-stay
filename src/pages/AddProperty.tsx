@@ -7,11 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Navbar from "@/components/Navbar";
 import { Loader2, Upload, X } from "lucide-react";
 import { z } from "zod";
+import { KENYA_COUNTIES } from "@/data/kenyaLocations";
 
 const propertySchema = z.object({
   title: z.string().trim().min(5, "Title must be at least 5 characters").max(100),
@@ -43,6 +44,8 @@ const AddProperty = () => {
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [selectedCounty, setSelectedCounty] = useState<string>("");
+  const [selectedSubCounty, setSelectedSubCounty] = useState<string>("");
   
   const [formData, setFormData] = useState<PropertyFormData>({
     title: "",
@@ -303,12 +306,64 @@ const AddProperty = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="location">Location/City *</Label>
+                  <Label htmlFor="county">County *</Label>
+                  <Select 
+                    value={selectedCounty} 
+                    onValueChange={(value) => {
+                      setSelectedCounty(value);
+                      setSelectedSubCounty("");
+                      setFormData({ ...formData, location: value });
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select county" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-[300px]">
+                      <SelectGroup>
+                        {KENYA_COUNTIES.map((county) => (
+                          <SelectItem key={county.name} value={county.name}>
+                            {county.name}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="subcounty">Sub-County {selectedCounty && "*"}</Label>
+                  <Select 
+                    value={selectedSubCounty} 
+                    onValueChange={(value) => {
+                      setSelectedSubCounty(value);
+                      setFormData({ ...formData, location: `${value}, ${selectedCounty}` });
+                    }}
+                    disabled={!selectedCounty}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={selectedCounty ? "Select sub-county" : "Select county first"} />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-[300px]">
+                      <SelectGroup>
+                        {KENYA_COUNTIES.find(c => c.name === selectedCounty)?.subCounties.map((subCounty) => (
+                          <SelectItem key={subCounty} value={subCounty}>
+                            {subCounty}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="address">Full Address *</Label>
                   <Input
-                    id="location"
-                    value={formData.location}
-                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                    placeholder="Nairobi, Kenya"
+                    id="address"
+                    value={formData.address}
+                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                    placeholder="123 Main Street"
                     required
                   />
                 </div>
@@ -331,17 +386,6 @@ const AddProperty = () => {
                     </SelectContent>
                   </Select>
                 </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="address">Full Address *</Label>
-                <Input
-                  id="address"
-                  value={formData.address}
-                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                  placeholder="123 Main Street, Westlands, Nairobi"
-                  required
-                />
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
