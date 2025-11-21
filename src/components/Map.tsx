@@ -1,6 +1,19 @@
-import { useEffect, useRef } from 'react';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+
+// Fix for default marker icon issue in Leaflet
+import icon from 'leaflet/dist/images/marker-icon.png';
+import iconShadow from 'leaflet/dist/images/marker-shadow.png';
+
+let DefaultIcon = L.icon({
+  iconUrl: icon,
+  shadowUrl: iconShadow,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+});
+
+L.Marker.prototype.options.icon = DefaultIcon;
 
 interface MapProps {
   latitude?: number;
@@ -9,47 +22,27 @@ interface MapProps {
 }
 
 const Map = ({ latitude, longitude, location }: MapProps) => {
-  const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<mapboxgl.Map | null>(null);
-
-  useEffect(() => {
-    if (!mapContainer.current) return;
-
-    // Use coordinates if provided, otherwise default to Nairobi
-    const lng = longitude || 36.8219;
-    const lat = latitude || -1.2921;
-
-    mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_PUBLIC_TOKEN || '';
-    
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/streets-v12',
-      center: [lng, lat],
-      zoom: 13,
-    });
-
-    // Add navigation controls
-    map.current.addControl(
-      new mapboxgl.NavigationControl(),
-      'top-right'
-    );
-
-    // Add marker
-    new mapboxgl.Marker({ color: 'hsl(186, 65%, 35%)' })
-      .setLngLat([lng, lat])
-      .setPopup(
-        new mapboxgl.Popup({ offset: 25 })
-          .setHTML(`<p class="font-semibold">${location || 'Property Location'}</p>`)
-      )
-      .addTo(map.current);
-
-    return () => {
-      map.current?.remove();
-    };
-  }, [latitude, longitude, location]);
+  // Use coordinates if provided, otherwise default to Nairobi
+  const lat = latitude || -1.2921;
+  const lng = longitude || 36.8219;
 
   return (
-    <div ref={mapContainer} className="w-full h-[400px] rounded-lg" />
+    <MapContainer
+      center={[lat, lng]}
+      zoom={13}
+      scrollWheelZoom={false}
+      className="w-full h-[400px] rounded-lg z-0"
+    >
+      <TileLayer
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+      />
+      <Marker position={[lat, lng]}>
+        <Popup>
+          <p className="font-semibold">{location || 'Property Location'}</p>
+        </Popup>
+      </Marker>
+    </MapContainer>
   );
 };
 
