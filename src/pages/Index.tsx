@@ -195,6 +195,7 @@ const Index = () => {
               <h4 className="font-semibold mb-4">Support</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li><a href="#" className="hover:text-primary transition-colors">Help Center</a></li>
+                <li><a href="/faq" className="hover:text-primary transition-colors">FAQ</a></li>
                 <li><a href="#" className="hover:text-primary transition-colors">Safety</a></li>
                 <li><a href="#" className="hover:text-primary transition-colors">Contact Us</a></li>
               </ul>

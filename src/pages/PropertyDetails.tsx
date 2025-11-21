@@ -3,6 +3,11 @@ import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
+import Map from "@/components/Map";
+import ShareProperty from "@/components/ShareProperty";
+import PropertyReviews from "@/components/PropertyReviews";
+import SimilarProperties from "@/components/SimilarProperties";
+import FavoriteButton from "@/components/FavoriteButton";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,7 +15,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Users, BedDouble, Bath, Star, Wifi, Coffee, CarFront } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { MapPin, Users, BedDouble, Bath, Star, Wifi, Coffee, CarFront, Shield, Calendar as CalendarIcon } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 
 interface Property {
@@ -26,6 +32,9 @@ interface Property {
   max_guests: number;
   amenities: string[];
   host_id: string;
+  latitude?: number;
+  longitude?: number;
+  property_type: string;
 }
 
 const PropertyDetails = () => {
@@ -244,13 +253,31 @@ const PropertyDetails = () => {
       <Navbar />
       
       <div className="container mx-auto px-4 py-8">
+        {/* Header Actions */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary">{property.property_type}</Badge>
+            <Badge variant="outline" className="gap-1">
+              <Shield className="h-3 w-3" />
+              Verified
+            </Badge>
+          </div>
+          <div className="flex items-center gap-2">
+            <ShareProperty 
+              propertyTitle={property.title} 
+              propertyUrl={`/property/${property.id}`} 
+            />
+            <FavoriteButton propertyId={property.id} />
+          </div>
+        </div>
+
         {/* Images */}
         <div className="grid grid-cols-4 gap-4 mb-8">
           <div className="col-span-4 md:col-span-2 md:row-span-2">
             <img
               src={property.images[0]}
               alt={property.title}
-              className="w-full h-full object-cover rounded-lg"
+              className="w-full h-full object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
             />
           </div>
           {property.images.slice(1, 5).map((image, index) => (
@@ -258,7 +285,7 @@ const PropertyDetails = () => {
               <img
                 src={image}
                 alt={`${property.title} ${index + 2}`}
-                className="w-full h-48 object-cover rounded-lg"
+                className="w-full h-48 object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
               />
             </div>
           ))}
@@ -309,6 +336,44 @@ const PropertyDetails = () => {
                 })}
               </div>
             </div>
+
+            <Separator />
+
+            {/* House Rules */}
+            <div>
+              <h2 className="text-xl font-semibold mb-4">House Rules</h2>
+              <ul className="space-y-2 text-muted-foreground">
+                <li className="flex items-center gap-2">
+                  <CalendarIcon className="h-4 w-4" />
+                  Check-in: After 2:00 PM
+                </li>
+                <li className="flex items-center gap-2">
+                  <CalendarIcon className="h-4 w-4" />
+                  Check-out: Before 11:00 AM
+                </li>
+                <li>• No smoking inside the property</li>
+                <li>• No parties or events without permission</li>
+                <li>• Pets may be allowed (contact host)</li>
+              </ul>
+            </div>
+
+            <Separator />
+
+            {/* Location Map */}
+            <div>
+              <h2 className="text-xl font-semibold mb-4">Location</h2>
+              <p className="text-muted-foreground mb-4">{property.address}</p>
+              <Map 
+                latitude={property.latitude} 
+                longitude={property.longitude} 
+                location={property.location}
+              />
+            </div>
+
+            <Separator />
+
+            {/* Reviews */}
+            <PropertyReviews propertyId={property.id} />
           </div>
 
           {/* Booking Card */}
@@ -401,6 +466,13 @@ const PropertyDetails = () => {
             </Card>
           </div>
         </div>
+
+        {/* Similar Properties */}
+        <SimilarProperties 
+          currentPropertyId={property.id}
+          location={property.location}
+          priceRange={property.price_per_night}
+        />
       </div>
     </div>
   );
