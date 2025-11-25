@@ -1,12 +1,36 @@
 import { Button } from "@/components/ui/button";
-import { Menu, Search, User, LogOut, Heart } from "lucide-react";
+import { Menu, Search, User, LogOut, Heart, Shield } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { NavLink } from "@/components/NavLink";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const Navbar = () => {
   const { user, signOut } = useAuth();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      checkAdminRole();
+    } else {
+      setIsAdmin(false);
+    }
+  }, [user]);
+
+  const checkAdminRole = async () => {
+    if (!user) return;
+    
+    const { data } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .eq("role", "admin")
+      .single();
+    
+    setIsAdmin(!!data);
+  };
   const navigate = useNavigate();
 
   const handleAuthAction = () => {
@@ -48,11 +72,21 @@ const Navbar = () => {
               Favorites
             </NavLink>
             <NavLink 
-              to="/auth" 
+              to="/add-property" 
               className="text-sm font-medium text-foreground hover:text-primary transition-colors"
             >
               Become a Host
             </NavLink>
+            {isAdmin && (
+              <NavLink 
+                to="/admin" 
+                className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors flex items-center gap-1"
+                activeClassName="text-primary"
+              >
+                <Shield className="h-4 w-4" />
+                Admin
+              </NavLink>
+            )}
           </div>
         </div>
         
@@ -104,11 +138,21 @@ const Navbar = () => {
                   Favorites
                 </NavLink>
                 <NavLink 
-                  to="/auth" 
+                  to="/add-property" 
                   className="text-base font-medium text-foreground hover:text-primary transition-colors py-2"
                 >
                   Become a Host
                 </NavLink>
+                {isAdmin && (
+                  <NavLink 
+                    to="/admin" 
+                    className="text-base font-medium text-muted-foreground hover:text-primary transition-colors py-2 flex items-center gap-2"
+                    activeClassName="text-primary"
+                  >
+                    <Shield className="h-4 w-4" />
+                    Admin
+                  </NavLink>
+                )}
                 {user && (
                   <div className="flex items-center gap-2 text-sm text-muted-foreground py-2 border-t mt-2 pt-4">
                     <User className="h-4 w-4" />
