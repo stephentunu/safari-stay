@@ -1,8 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Star, MapPin, Heart } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Star, MapPin } from "lucide-react";
+import FavoriteButton from "@/components/FavoriteButton";
 
 interface PropertyCardProps {
   id?: string;
@@ -29,13 +29,9 @@ const PropertyCard = ({ id, image, title, location, price, rating, reviews, type
           alt={title}
           className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-500"
         />
-        <Button 
-          size="icon" 
-          variant="ghost" 
-          className="absolute top-3 right-3 bg-background/80 backdrop-blur-sm hover:bg-background"
-        >
-          <Heart className="h-4 w-4" />
-        </Button>
+        <div className="absolute top-3 right-3 bg-background/80 backdrop-blur-sm rounded-full">
+          <FavoriteButton propertyId={id || ""} size="sm" />
+        </div>
         <Badge className="absolute top-3 left-3 bg-accent text-accent-foreground">
           {type}
         </Badge>

@@ -1,15 +1,32 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MapPin, Calendar, Users, Search } from "lucide-react";
 import { KENYA_COUNTIES } from "@/data/kenyaLocations";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const SearchBar = () => {
+  const navigate = useNavigate();
   const [selectedCounty, setSelectedCounty] = useState<string>("");
   const [selectedSubCounty, setSelectedSubCounty] = useState<string>("");
+  const [checkInDate, setCheckInDate] = useState<string>("");
+  const [checkOutDate, setCheckOutDate] = useState<string>("");
+  const [guests, setGuests] = useState<string>("");
 
   const selectedCountyData = KENYA_COUNTIES.find(c => c.name === selectedCounty);
+
+  const handleSearch = () => {
+    const params = new URLSearchParams();
+    
+    const location = selectedSubCounty || selectedCounty;
+    if (location) params.append("location", location);
+    if (checkInDate) params.append("checkIn", checkInDate);
+    if (checkOutDate) params.append("checkOut", checkOutDate);
+    if (guests) params.append("guests", guests);
+
+    navigate(`/search?${params.toString()}`);
+  };
 
   return (
     <div className="bg-card rounded-xl shadow-xl p-2 w-full max-w-4xl mx-auto border border-border">
@@ -63,6 +80,8 @@ const SearchBar = () => {
             <label className="text-xs font-medium text-muted-foreground">Check-in</label>
             <Input 
               type="date" 
+              value={checkInDate}
+              onChange={(e) => setCheckInDate(e.target.value)}
               className="border-0 p-0 h-auto focus-visible:ring-0 font-medium"
             />
           </div>
@@ -74,6 +93,9 @@ const SearchBar = () => {
             <label className="text-xs font-medium text-muted-foreground">Check-out</label>
             <Input 
               type="date" 
+              value={checkOutDate}
+              onChange={(e) => setCheckOutDate(e.target.value)}
+              min={checkInDate}
               className="border-0 p-0 h-auto focus-visible:ring-0 font-medium"
             />
           </div>
@@ -85,12 +107,14 @@ const SearchBar = () => {
             <label className="text-xs font-medium text-muted-foreground">Guests</label>
             <Input 
               type="number" 
-              placeholder="Add guests" 
+              placeholder="Add guests"
+              value={guests}
+              onChange={(e) => setGuests(e.target.value)}
               className="border-0 p-0 h-auto focus-visible:ring-0 font-medium"
               min="1"
             />
           </div>
-          <Button size="icon" variant="accent" className="rounded-lg ml-2">
+          <Button size="icon" variant="accent" className="rounded-lg ml-2" onClick={handleSearch}>
             <Search className="h-5 w-5" />
           </Button>
         </div>

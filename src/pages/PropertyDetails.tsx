@@ -49,12 +49,42 @@ const PropertyDetails = () => {
   const [specialRequests, setSpecialRequests] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [booking, setBooking] = useState(false);
+  const [isAvailable, setIsAvailable] = useState(true);
+  const [checkingAvailability, setCheckingAvailability] = useState(false);
 
   useEffect(() => {
     if (id) {
       fetchProperty();
     }
   }, [id]);
+
+  useEffect(() => {
+    if (checkInDate && checkOutDate && id) {
+      checkAvailability();
+    }
+  }, [checkInDate, checkOutDate, id]);
+
+  const checkAvailability = async () => {
+    if (!checkInDate || !checkOutDate) return;
+
+    setCheckingAvailability(true);
+    try {
+      const { data: bookings, error } = await supabase
+        .from("bookings")
+        .select("id")
+        .eq("property_id", id)
+        .in("status", ["pending", "confirmed"])
+        .or(`and(check_in_date.lte.${format(checkOutDate, "yyyy-MM-dd")},check_out_date.gte.${format(checkInDate, "yyyy-MM-dd")})`);
+
+      if (error) throw error;
+
+      setIsAvailable(!bookings || bookings.length === 0);
+    } catch (error: any) {
+      console.error("Error checking availability:", error);
+    } finally {
+      setCheckingAvailability(false);
+    }
+  };
 
   const fetchProperty = async () => {
     try {
@@ -455,12 +485,24 @@ const PropertyDetails = () => {
                   </div>
                 )}
 
+                {checkInDate && checkOutDate && (
+                  <div className="rounded-lg p-3 bg-muted">
+                    {checkingAvailability ? (
+                      <p className="text-sm text-muted-foreground">Checking availability...</p>
+                    ) : isAvailable ? (
+                      <p className="text-sm text-green-600 font-medium">✓ Available for selected dates</p>
+                    ) : (
+                      <p className="text-sm text-destructive font-medium">✗ Unavailable for booking - property is already booked for these dates</p>
+                    )}
+                  </div>
+                )}
+
                 <Button
                   className="w-full"
                   onClick={handleBooking}
-                  disabled={booking || !checkInDate || !checkOutDate || !phoneNumber}
+                  disabled={booking || !isAvailable || checkingAvailability}
                 >
-                  {booking ? "Processing..." : "Book Now"}
+                  {booking ? "Processing..." : !isAvailable ? "Unavailable" : "Book Now"}
                 </Button>
               </CardContent>
             </Card>

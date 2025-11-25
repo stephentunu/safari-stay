@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Menu, Search, User, LogOut } from "lucide-react";
+import { Menu, Search, User, LogOut, Heart } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { NavLink } from "@/components/NavLink";
@@ -38,6 +38,14 @@ const Navbar = () => {
               activeClassName="text-primary"
             >
               Experiences
+            </NavLink>
+            <NavLink 
+              to="/favorites" 
+              className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors flex items-center gap-1"
+              activeClassName="text-primary"
+            >
+              <Heart className="h-4 w-4" />
+              Favorites
             </NavLink>
             <NavLink 
               to="/auth" 
@@ -86,6 +94,14 @@ const Navbar = () => {
                   activeClassName="text-primary"
                 >
                   Experiences
+                </NavLink>
+                <NavLink 
+                  to="/favorites" 
+                  className="text-base font-medium text-muted-foreground hover:text-primary transition-colors py-2 flex items-center gap-2"
+                  activeClassName="text-primary"
+                >
+                  <Heart className="h-4 w-4" />
+                  Favorites
                 </NavLink>
                 <NavLink 
                   to="/auth" 
