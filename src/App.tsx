@@ -10,6 +10,8 @@ import PropertyDetails from "./pages/PropertyDetails";
 import Receipt from "./pages/Receipt";
 import Experiences from "./pages/Experiences";
 import FAQ from "./pages/FAQ";
+import Favorites from "./pages/Favorites";
+import SearchResults from "./pages/SearchResults";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +30,8 @@ const App = () => (
           <Route path="/receipt/:bookingId" element={<Receipt />} />
           <Route path="/experiences" element={<Experiences />} />
           <Route path="/faq" element={<FAQ />} />
+          <Route path="/favorites" element={<Favorites />} />
+          <Route path="/search" element={<SearchResults />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
