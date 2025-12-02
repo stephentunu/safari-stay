@@ -23,11 +23,14 @@ const AdminDashboard = () => {
   const [stats, setStats] = useState({ totalProperties: 0, totalBookings: 0, totalUsers: 0, totalRevenue: 0 });
 
   useEffect(() => {
-    checkAdminAccess();
-  }, [user]);
+    if (!authLoading) {
+      checkAdminAccess();
+    }
+  }, [user, authLoading]);
 
   const checkAdminAccess = async () => {
     if (!user) {
+      setLoading(false);
       navigate("/auth");
       return;
     }
