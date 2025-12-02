@@ -32,6 +32,7 @@ const AdminDashboard = () => {
       return;
     }
 
+    setLoading(true);
     try {
       const { data, error } = await supabase
         .from("user_roles")
@@ -42,14 +43,16 @@ const AdminDashboard = () => {
 
       if (error || !data) {
         toast.error("Access denied. Admin privileges required.");
+        setLoading(false);
         navigate("/");
         return;
       }
 
       setIsAdmin(true);
-      fetchDashboardData();
+      await fetchDashboardData();
     } catch (error) {
       toast.error("Failed to verify admin access");
+      setLoading(false);
       navigate("/");
     }
   };
