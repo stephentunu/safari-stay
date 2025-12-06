@@ -34,6 +34,17 @@ const AMENITIES_LIST = [
   "Pool", "Hot Water", "Gym", "Security", "Backup Generator", "Garden"
 ];
 
+const FOOD_TYPES_LIST = [
+  "Continental", "African", "Indian", "Chinese", "Italian", "Fast Food",
+  "Vegetarian", "Vegan", "Halal", "Seafood", "BBQ", "Breakfast Buffet"
+];
+
+const SERVICES_LIST = [
+  "Room Service", "Laundry", "Airport Shuttle", "Spa & Massage", "Conference Room",
+  "Tour Desk", "24hr Reception", "Currency Exchange", "Childcare", "Car Rental",
+  "Free Breakfast", "Bar & Lounge", "Restaurant", "Business Center", "Concierge"
+];
+
 const AddProperty = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -42,6 +53,8 @@ const AddProperty = () => {
   const [isHost, setIsHost] = useState(false);
   const [checkingRole, setCheckingRole] = useState(true);
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
+  const [selectedFoodTypes, setSelectedFoodTypes] = useState<string[]>([]);
+  const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [selectedCounty, setSelectedCounty] = useState<string>("");
@@ -149,6 +162,22 @@ const AddProperty = () => {
     );
   };
 
+  const toggleFoodType = (food: string) => {
+    setSelectedFoodTypes(prev => 
+      prev.includes(food) 
+        ? prev.filter(f => f !== food)
+        : [...prev, food]
+    );
+  };
+
+  const toggleService = (service: string) => {
+    setSelectedServices(prev => 
+      prev.includes(service) 
+        ? prev.filter(s => s !== service)
+        : [...prev, service]
+    );
+  };
+
   const uploadImages = async (propertyId: string): Promise<string[]> => {
     const uploadedUrls: string[] = [];
     
@@ -210,6 +239,8 @@ const AddProperty = () => {
           bedrooms: validatedData.bedrooms,
           bathrooms: validatedData.bathrooms,
           amenities: validatedData.amenities,
+          food_types: selectedFoodTypes,
+          services: selectedServices,
           images: [],
         })
         .select()
@@ -455,6 +486,44 @@ const AddProperty = () => {
                   ))}
                 </div>
               </div>
+
+              <div className="space-y-2">
+                <Label>Services Offered (Optional)</Label>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                  {SERVICES_LIST.map((service) => (
+                    <Button
+                      key={service}
+                      type="button"
+                      variant={selectedServices.includes(service) ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => toggleService(service)}
+                      className="justify-start"
+                    >
+                      {service}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              {(formData.property_type === "hotel" || formData.property_type === "guesthouse") && (
+                <div className="space-y-2">
+                  <Label>Food Types Offered (Optional - for hotels/restaurants)</Label>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                    {FOOD_TYPES_LIST.map((food) => (
+                      <Button
+                        key={food}
+                        type="button"
+                        variant={selectedFoodTypes.includes(food) ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => toggleFoodType(food)}
+                        className="justify-start"
+                      >
+                        {food}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label>Property Images * (Max 10)</Label>

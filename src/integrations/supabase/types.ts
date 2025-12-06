@@ -166,6 +166,7 @@ export type Database = {
           bedrooms: number
           created_at: string
           description: string
+          food_types: string[] | null
           host_id: string
           id: string
           images: string[] | null
@@ -177,6 +178,7 @@ export type Database = {
           max_guests: number
           price_per_night: number
           property_type: Database["public"]["Enums"]["property_type"]
+          services: string[] | null
           title: string
           updated_at: string
         }
@@ -187,6 +189,7 @@ export type Database = {
           bedrooms: number
           created_at?: string
           description: string
+          food_types?: string[] | null
           host_id: string
           id?: string
           images?: string[] | null
@@ -198,6 +201,7 @@ export type Database = {
           max_guests: number
           price_per_night: number
           property_type: Database["public"]["Enums"]["property_type"]
+          services?: string[] | null
           title: string
           updated_at?: string
         }
@@ -208,6 +212,7 @@ export type Database = {
           bedrooms?: number
           created_at?: string
           description?: string
+          food_types?: string[] | null
           host_id?: string
           id?: string
           images?: string[] | null
@@ -219,6 +224,7 @@ export type Database = {
           max_guests?: number
           price_per_night?: number
           property_type?: Database["public"]["Enums"]["property_type"]
+          services?: string[] | null
           title?: string
           updated_at?: string
         }
