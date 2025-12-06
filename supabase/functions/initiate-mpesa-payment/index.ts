@@ -21,7 +21,19 @@ serve(async (req) => {
   try {
     const { phone_number, amount, booking_id, payment_id }: MpesaRequest = await req.json();
 
-    console.log("Initiating M-Pesa payment for booking:", booking_id);
+    // Format phone number to 254XXXXXXXXX format (M-Pesa requires this format without +)
+    let formattedPhone = phone_number.replace(/\s+/g, '').replace(/-/g, '');
+    if (formattedPhone.startsWith('+')) {
+      formattedPhone = formattedPhone.substring(1);
+    }
+    if (formattedPhone.startsWith('0')) {
+      formattedPhone = '254' + formattedPhone.substring(1);
+    }
+    if (!formattedPhone.startsWith('254')) {
+      formattedPhone = '254' + formattedPhone;
+    }
+
+    console.log("Initiating M-Pesa payment for booking:", booking_id, "Phone:", formattedPhone);
 
     // Get M-Pesa access token
     const consumerKey = Deno.env.get("MPESA_CONSUMER_KEY");
@@ -62,9 +74,9 @@ serve(async (req) => {
           Timestamp: timestamp,
           TransactionType: "CustomerPayBillOnline",
           Amount: Math.round(amount),
-          PartyA: phone_number,
+          PartyA: formattedPhone,
           PartyB: shortcode,
-          PhoneNumber: phone_number,
+          PhoneNumber: formattedPhone,
           CallBackURL: callbackUrl,
           AccountReference: booking_id,
           TransactionDesc: `Payment for booking ${booking_id}`,
