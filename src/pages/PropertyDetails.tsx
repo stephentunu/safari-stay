@@ -16,7 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { MapPin, Users, BedDouble, Bath, Star, Wifi, Coffee, CarFront, Shield, Calendar as CalendarIcon } from "lucide-react";
+import { MapPin, Users, BedDouble, Bath, Star, Wifi, Coffee, CarFront, Shield, Calendar as CalendarIcon, Utensils, Briefcase } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 
 interface Property {
@@ -31,6 +31,8 @@ interface Property {
   bathrooms: number;
   max_guests: number;
   amenities: string[];
+  food_types?: string[];
+  services?: string[];
   host_id: string;
   latitude?: number;
   longitude?: number;
@@ -366,6 +368,38 @@ const PropertyDetails = () => {
                 })}
               </div>
             </div>
+
+            {property.services && property.services.length > 0 && (
+              <div>
+                <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                  <Briefcase className="h-5 w-5" />
+                  Services Offered
+                </h2>
+                <div className="flex flex-wrap gap-2">
+                  {property.services.map((service, index) => (
+                    <Badge key={index} variant="outline" className="flex items-center gap-1">
+                      {service}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {property.food_types && property.food_types.length > 0 && (
+              <div>
+                <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                  <Utensils className="h-5 w-5" />
+                  Food & Cuisine
+                </h2>
+                <div className="flex flex-wrap gap-2">
+                  {property.food_types.map((food, index) => (
+                    <Badge key={index} variant="outline" className="flex items-center gap-1 bg-orange-50 text-orange-700 border-orange-200">
+                      {food}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <Separator />
 
