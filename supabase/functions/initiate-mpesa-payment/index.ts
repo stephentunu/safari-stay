@@ -78,8 +78,8 @@ serve(async (req) => {
           PartyB: shortcode,
           PhoneNumber: formattedPhone,
           CallBackURL: callbackUrl,
-          AccountReference: booking_id,
-          TransactionDesc: `Payment for booking ${booking_id}`,
+          AccountReference: "McDone Enterprices",
+          TransactionDesc: `Booking ${booking_id.substring(0, 8)}`,
         }),
       }
     );
