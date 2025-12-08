@@ -1,14 +1,17 @@
 import { Button } from "@/components/ui/button";
-import { Menu, Search, User, LogOut, Heart, Shield } from "lucide-react";
+import { Menu, User, LogOut, Heart, Shield } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { NavLink } from "@/components/NavLink";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import LanguageSelector from "@/components/LanguageSelector";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const Navbar = () => {
   const { user, signOut } = useAuth();
+  const { t } = useLanguage();
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
@@ -54,14 +57,14 @@ const Navbar = () => {
               className="text-sm font-medium text-foreground hover:text-primary transition-colors"
               activeClassName="text-primary"
             >
-              Stays
+              {t("nav.home")}
             </NavLink>
             <NavLink 
               to="/experiences" 
               className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
               activeClassName="text-primary"
             >
-              Experiences
+              {t("nav.experiences")}
             </NavLink>
             <NavLink 
               to="/favorites" 
@@ -69,13 +72,20 @@ const Navbar = () => {
               activeClassName="text-primary"
             >
               <Heart className="h-4 w-4" />
-              Favorites
+              {t("nav.favorites")}
+            </NavLink>
+            <NavLink 
+              to="/faq" 
+              className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+              activeClassName="text-primary"
+            >
+              {t("nav.faq")}
             </NavLink>
             <NavLink 
               to="/add-property" 
               className="text-sm font-medium text-foreground hover:text-primary transition-colors"
             >
-              Become a Host
+              {t("nav.listProperty")}
             </NavLink>
             {isAdmin && (
               <NavLink 
@@ -91,6 +101,7 @@ const Navbar = () => {
         </div>
         
         <div className="flex items-center gap-3">
+          <LanguageSelector />
           {user && (
             <div className="hidden md:flex items-center gap-2 text-sm text-muted-foreground">
               <User className="h-4 w-4" />
@@ -101,10 +112,10 @@ const Navbar = () => {
             {user ? (
               <>
                 <LogOut className="h-4 w-4 mr-2" />
-                Sign Out
+                {t("nav.signout")}
               </>
             ) : (
-              "Sign In"
+              t("nav.signin")
             )}
           </Button>
           <Sheet>
@@ -120,14 +131,14 @@ const Navbar = () => {
                   className="text-base font-medium text-foreground hover:text-primary transition-colors py-2"
                   activeClassName="text-primary"
                 >
-                  Stays
+                  {t("nav.home")}
                 </NavLink>
                 <NavLink 
                   to="/experiences" 
                   className="text-base font-medium text-muted-foreground hover:text-primary transition-colors py-2"
                   activeClassName="text-primary"
                 >
-                  Experiences
+                  {t("nav.experiences")}
                 </NavLink>
                 <NavLink 
                   to="/favorites" 
@@ -135,13 +146,20 @@ const Navbar = () => {
                   activeClassName="text-primary"
                 >
                   <Heart className="h-4 w-4" />
-                  Favorites
+                  {t("nav.favorites")}
+                </NavLink>
+                <NavLink 
+                  to="/faq" 
+                  className="text-base font-medium text-muted-foreground hover:text-primary transition-colors py-2"
+                  activeClassName="text-primary"
+                >
+                  {t("nav.faq")}
                 </NavLink>
                 <NavLink 
                   to="/add-property" 
                   className="text-base font-medium text-foreground hover:text-primary transition-colors py-2"
                 >
-                  Become a Host
+                  {t("nav.listProperty")}
                 </NavLink>
                 {isAdmin && (
                   <NavLink 
@@ -163,10 +181,10 @@ const Navbar = () => {
                   {user ? (
                     <>
                       <LogOut className="h-4 w-4 mr-2" />
-                      Sign Out
+                      {t("nav.signout")}
                     </>
                   ) : (
-                    "Sign In"
+                    t("nav.signin")
                   )}
                 </Button>
               </nav>

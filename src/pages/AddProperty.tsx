@@ -13,6 +13,7 @@ import Navbar from "@/components/Navbar";
 import { Loader2, Upload, X } from "lucide-react";
 import { z } from "zod";
 import { KENYA_COUNTIES } from "@/data/kenyaLocations";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const propertySchema = z.object({
   title: z.string().trim().min(5, "Title must be at least 5 characters").max(100),
@@ -45,10 +46,20 @@ const SERVICES_LIST = [
   "Free Breakfast", "Bar & Lounge", "Restaurant", "Business Center", "Concierge"
 ];
 
+const PROPERTY_CATEGORIES = [
+  { value: "luxury", label: "category.luxury" },
+  { value: "budget", label: "category.budget" },
+  { value: "business", label: "category.business" },
+  { value: "vacation", label: "category.vacation" },
+  { value: "eco", label: "category.eco" },
+  { value: "heritage", label: "category.heritage" },
+];
+
 const AddProperty = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [isHost, setIsHost] = useState(false);
   const [checkingRole, setCheckingRole] = useState(true);
@@ -59,6 +70,9 @@ const AddProperty = () => {
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [selectedCounty, setSelectedCounty] = useState<string>("");
   const [selectedSubCounty, setSelectedSubCounty] = useState<string>("");
+  const [propertyCategory, setPropertyCategory] = useState<string>("");
+  const [briefHistory, setBriefHistory] = useState<string>("");
+  const [nearbyAttractions, setNearbyAttractions] = useState<string>("");
   
   const [formData, setFormData] = useState<PropertyFormData>({
     title: "",
@@ -101,7 +115,6 @@ const AddProperty = () => {
         if (data) {
           setIsHost(true);
         } else {
-          // User doesn't have host role, assign it
           const { error: insertError } = await supabase
             .from("user_roles")
             .insert({ user_id: user.id, role: "host" });
@@ -209,9 +222,21 @@ const AddProperty = () => {
     try {
       setLoading(true);
 
-      // Validate form
+      // Build full description with additional info
+      let fullDescription = formData.description;
+      if (propertyCategory) {
+        fullDescription = `[Category: ${propertyCategory}]\n\n${fullDescription}`;
+      }
+      if (briefHistory) {
+        fullDescription += `\n\n**History:** ${briefHistory}`;
+      }
+      if (nearbyAttractions) {
+        fullDescription += `\n\n**Nearby:** ${nearbyAttractions}`;
+      }
+
       const validatedData = propertySchema.parse({
         ...formData,
+        description: fullDescription,
         amenities: selectedAmenities,
       });
 
@@ -224,7 +249,6 @@ const AddProperty = () => {
         return;
       }
 
-      // Insert property first to get the ID
       const { data: property, error: propertyError } = await supabase
         .from("properties")
         .insert({
@@ -248,10 +272,8 @@ const AddProperty = () => {
 
       if (propertyError) throw propertyError;
 
-      // Upload images
       const imageUrls = await uploadImages(property.id);
 
-      // Update property with image URLs
       const { error: updateError } = await supabase
         .from("properties")
         .update({ images: imageUrls })
@@ -260,7 +282,7 @@ const AddProperty = () => {
       if (updateError) throw updateError;
 
       toast({
-        title: "Success!",
+        title: t("common.success"),
         description: "Your property has been submitted for review. You'll be notified once it's approved.",
       });
 
@@ -276,7 +298,7 @@ const AddProperty = () => {
         });
       } else {
         toast({
-          title: "Error",
+          title: t("common.error"),
           description: error.message || "Failed to create property. Please try again.",
           variant: "destructive",
         });
@@ -305,7 +327,7 @@ const AddProperty = () => {
       <div className="container mx-auto px-4 py-24 max-w-4xl">
         <Card>
           <CardHeader>
-            <CardTitle className="text-3xl">List Your Property</CardTitle>
+            <CardTitle className="text-3xl">{t("nav.listProperty")}</CardTitle>
             <CardDescription>
               Fill in the details below to list your property on McDone. Your listing will be reviewed before going live.
             </CardDescription>
@@ -313,7 +335,7 @@ const AddProperty = () => {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="title">Property Title *</Label>
+                <Label htmlFor="title">{t("property.title")} *</Label>
                 <Input
                   id="title"
                   value={formData.title}
@@ -323,21 +345,80 @@ const AddProperty = () => {
                 />
               </div>
 
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="category">{t("property.category")} *</Label>
+                  <Select value={propertyCategory} onValueChange={setPropertyCategory}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover z-50">
+                      {PROPERTY_CATEGORIES.map((cat) => (
+                        <SelectItem key={cat.value} value={cat.value}>
+                          {t(cat.label)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="property_type">{t("property.type")} *</Label>
+                  <Select
+                    value={formData.property_type}
+                    onValueChange={(value: any) => setFormData({ ...formData, property_type: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover z-50">
+                      <SelectItem value="hotel">Hotel</SelectItem>
+                      <SelectItem value="apartment">Apartment</SelectItem>
+                      <SelectItem value="house">House</SelectItem>
+                      <SelectItem value="villa">Villa</SelectItem>
+                      <SelectItem value="guesthouse">Guest House</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
               <div className="space-y-2">
-                <Label htmlFor="description">Description *</Label>
+                <Label htmlFor="description">{t("property.description")} *</Label>
                 <Textarea
                   id="description"
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   placeholder="Describe your property, its features, and what makes it special..."
-                  rows={5}
+                  rows={4}
                   required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="history">{t("property.history")}</Label>
+                <Textarea
+                  id="history"
+                  value={briefHistory}
+                  onChange={(e) => setBriefHistory(e.target.value)}
+                  placeholder="Share any interesting history about this property..."
+                  rows={3}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="attractions">{t("property.nearbyAttractions")}</Label>
+                <Textarea
+                  id="attractions"
+                  value={nearbyAttractions}
+                  onChange={(e) => setNearbyAttractions(e.target.value)}
+                  placeholder="e.g., 5 min walk to Uhuru Park, Near Moi Avenue, Close to KICC..."
+                  rows={3}
                 />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="county">County *</Label>
+                  <Label htmlFor="county">{t("property.county")} *</Label>
                   <Select 
                     value={selectedCounty} 
                     onValueChange={(value) => {
@@ -349,7 +430,7 @@ const AddProperty = () => {
                     <SelectTrigger>
                       <SelectValue placeholder="Select county" />
                     </SelectTrigger>
-                    <SelectContent className="max-h-[300px]">
+                    <SelectContent className="max-h-[300px] bg-popover z-50">
                       <SelectGroup>
                         {KENYA_COUNTIES.map((county) => (
                           <SelectItem key={county.name} value={county.name}>
@@ -362,7 +443,7 @@ const AddProperty = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="subcounty">Sub-County {selectedCounty && "*"}</Label>
+                  <Label htmlFor="subcounty">{t("property.subcounty")} {selectedCounty && "*"}</Label>
                   <Select 
                     value={selectedSubCounty} 
                     onValueChange={(value) => {
@@ -374,7 +455,7 @@ const AddProperty = () => {
                     <SelectTrigger>
                       <SelectValue placeholder={selectedCounty ? "Select sub-county" : "Select county first"} />
                     </SelectTrigger>
-                    <SelectContent className="max-h-[300px]">
+                    <SelectContent className="max-h-[300px] bg-popover z-50">
                       <SelectGroup>
                         {KENYA_COUNTIES.find(c => c.name === selectedCounty)?.subCounties.map((subCounty) => (
                           <SelectItem key={subCounty} value={subCounty}>
@@ -387,41 +468,20 @@ const AddProperty = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="address">Full Address *</Label>
-                  <Input
-                    id="address"
-                    value={formData.address}
-                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                    placeholder="123 Main Street"
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="property_type">Property Type *</Label>
-                  <Select
-                    value={formData.property_type}
-                    onValueChange={(value: any) => setFormData({ ...formData, property_type: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="hotel">Hotel</SelectItem>
-                      <SelectItem value="apartment">Apartment</SelectItem>
-                      <SelectItem value="house">House</SelectItem>
-                      <SelectItem value="villa">Villa</SelectItem>
-                      <SelectItem value="guesthouse">Guest House</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="address">{t("property.address")} *</Label>
+                <Input
+                  id="address"
+                  value={formData.address}
+                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                  placeholder="123 Main Street"
+                  required
+                />
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="price">Price/Night (KES) *</Label>
+                  <Label htmlFor="price">{t("property.price")} *</Label>
                   <Input
                     id="price"
                     type="number"
@@ -433,7 +493,7 @@ const AddProperty = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="guests">Max Guests *</Label>
+                  <Label htmlFor="guests">{t("property.guests")} *</Label>
                   <Input
                     id="guests"
                     type="number"
@@ -445,7 +505,7 @@ const AddProperty = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="bedrooms">Bedrooms *</Label>
+                  <Label htmlFor="bedrooms">{t("property.bedrooms")} *</Label>
                   <Input
                     id="bedrooms"
                     type="number"
@@ -457,7 +517,7 @@ const AddProperty = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="bathrooms">Bathrooms *</Label>
+                  <Label htmlFor="bathrooms">{t("property.bathrooms")} *</Label>
                   <Input
                     id="bathrooms"
                     type="number"
@@ -470,7 +530,7 @@ const AddProperty = () => {
               </div>
 
               <div className="space-y-2">
-                <Label>Amenities * (Select at least one)</Label>
+                <Label>{t("property.amenities")} * (Select at least one)</Label>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                   {AMENITIES_LIST.map((amenity) => (
                     <Button
@@ -488,7 +548,7 @@ const AddProperty = () => {
               </div>
 
               <div className="space-y-2">
-                <Label>Services Offered (Optional)</Label>
+                <Label>{t("property.services")} (Optional)</Label>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                   {SERVICES_LIST.map((service) => (
                     <Button
@@ -507,7 +567,7 @@ const AddProperty = () => {
 
               {(formData.property_type === "hotel" || formData.property_type === "guesthouse") && (
                 <div className="space-y-2">
-                  <Label>Food Types Offered (Optional - for hotels/restaurants)</Label>
+                  <Label>{t("property.foodTypes")} (Optional - for hotels/restaurants)</Label>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                     {FOOD_TYPES_LIST.map((food) => (
                       <Button
@@ -526,7 +586,7 @@ const AddProperty = () => {
               )}
 
               <div className="space-y-2">
-                <Label>Property Images * (Max 10)</Label>
+                <Label>{t("property.images")} * (Max 10)</Label>
                 <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
                   <input
                     type="file"
@@ -575,7 +635,7 @@ const AddProperty = () => {
                   className="flex-1"
                 >
                   {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Submit for Review
+                  {t("property.submit")}
                 </Button>
                 <Button
                   type="button"
@@ -583,7 +643,7 @@ const AddProperty = () => {
                   onClick={() => navigate("/")}
                   disabled={loading}
                 >
-                  Cancel
+                  {t("property.cancel")}
                 </Button>
               </div>
             </form>
