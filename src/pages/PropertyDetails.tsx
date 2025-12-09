@@ -47,7 +47,8 @@ const PropertyDetails = () => {
   const [loading, setLoading] = useState(true);
   const [checkInDate, setCheckInDate] = useState<Date>();
   const [checkOutDate, setCheckOutDate] = useState<Date>();
-  const [guests, setGuests] = useState(1);
+  const [adults, setAdults] = useState(1);
+  const [children, setChildren] = useState<{ age: number }[]>([]);
   const [specialRequests, setSpecialRequests] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [booking, setBooking] = useState(false);
@@ -145,7 +146,11 @@ const PropertyDetails = () => {
 
     try {
       const nights = differenceInDays(checkOutDate, checkInDate);
-      const totalPrice = nights * (property?.price_per_night || 0);
+      // Children under 3 are free, count paying guests
+      const payingChildren = children.filter(c => c.age >= 3).length;
+      const payingGuests = adults + payingChildren;
+      const totalPrice = nights * (property?.price_per_night || 0) * payingGuests;
+      const totalGuests = adults + children.length;
 
       // Create booking
       const { data: bookingData, error: bookingError } = await supabase
@@ -156,7 +161,7 @@ const PropertyDetails = () => {
           host_id: property?.host_id,
           check_in_date: format(checkInDate, "yyyy-MM-dd"),
           check_out_date: format(checkOutDate, "yyyy-MM-dd"),
-          guests,
+          guests: totalGuests,
           total_price: totalPrice,
           special_requests: specialRequests,
           status: "pending",
@@ -254,8 +259,28 @@ const PropertyDetails = () => {
   const calculateTotalPrice = () => {
     if (!checkInDate || !checkOutDate || !property) return 0;
     const nights = differenceInDays(checkOutDate, checkInDate);
-    return nights * property.price_per_night;
+    // Children under 3 are free
+    const payingChildren = children.filter(c => c.age >= 3).length;
+    const payingGuests = adults + payingChildren;
+    return nights * property.price_per_night * payingGuests;
   };
+
+  const addChild = () => {
+    setChildren([...children, { age: 0 }]);
+  };
+
+  const removeChild = (index: number) => {
+    setChildren(children.filter((_, i) => i !== index));
+  };
+
+  const updateChildAge = (index: number, age: number) => {
+    const updated = [...children];
+    updated[index] = { age };
+    setChildren(updated);
+  };
+
+  const getFreeChildrenCount = () => children.filter(c => c.age < 3).length;
+  const getPayingChildrenCount = () => children.filter(c => c.age >= 3).length;
 
   const amenityIcons: { [key: string]: any } = {
     wifi: Wifi,
@@ -474,15 +499,63 @@ const PropertyDetails = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="guests">Number of Guests</Label>
+                  <Label htmlFor="adults">Adults</Label>
                   <Input
-                    id="guests"
+                    id="adults"
                     type="number"
                     min="1"
                     max={property.max_guests}
-                    value={guests}
-                    onChange={(e) => setGuests(parseInt(e.target.value))}
+                    value={adults}
+                    onChange={(e) => setAdults(Math.max(1, parseInt(e.target.value) || 1))}
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label>Children</Label>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm"
+                      onClick={addChild}
+                      disabled={adults + children.length >= property.max_guests}
+                    >
+                      + Add Child
+                    </Button>
+                  </div>
+                  {children.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">No children added</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {children.map((child, index) => (
+                        <div key={index} className="flex items-center gap-2">
+                          <Input
+                            type="number"
+                            min="0"
+                            max="17"
+                            value={child.age}
+                            onChange={(e) => updateChildAge(index, parseInt(e.target.value) || 0)}
+                            className="w-20"
+                            placeholder="Age"
+                          />
+                          <span className="text-sm text-muted-foreground">years</span>
+                          {child.age < 3 && (
+                            <Badge variant="secondary" className="text-xs bg-green-100 text-green-700">FREE</Badge>
+                          )}
+                          <Button 
+                            type="button" 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => removeChild(index)}
+                            className="text-destructive hover:text-destructive"
+                          >
+                            ×
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <p className="text-xs text-muted-foreground">Children under 3 years stay free!</p>
                 </div>
 
                 <div className="space-y-2">
@@ -509,9 +582,22 @@ const PropertyDetails = () => {
                 {nights > 0 && (
                   <div className="border-t pt-4 space-y-2">
                     <div className="flex justify-between text-sm">
-                      <span>KES {property.price_per_night.toLocaleString()} x {nights} nights</span>
-                      <span>KES {(property.price_per_night * nights).toLocaleString()}</span>
+                      <span>{adults} adult{adults > 1 ? 's' : ''} x {nights} nights</span>
+                      <span>KES {(property.price_per_night * nights * adults).toLocaleString()}</span>
                     </div>
+                    {getPayingChildrenCount() > 0 && (
+                      <div className="flex justify-between text-sm">
+                        <span>{getPayingChildrenCount()} child{getPayingChildrenCount() > 1 ? 'ren' : ''} (3+ yrs) x {nights} nights</span>
+                        <span>KES {(property.price_per_night * nights * getPayingChildrenCount()).toLocaleString()}</span>
+                      </div>
+                    )}
+                    {getFreeChildrenCount() > 0 && (
+                      <div className="flex justify-between text-sm text-green-600">
+                        <span>{getFreeChildrenCount()} child{getFreeChildrenCount() > 1 ? 'ren' : ''} (under 3 yrs)</span>
+                        <span>FREE</span>
+                      </div>
+                    )}
+                    <Separator />
                     <div className="flex justify-between font-semibold text-lg">
                       <span>Total</span>
                       <span>KES {calculateTotalPrice().toLocaleString()}</span>
