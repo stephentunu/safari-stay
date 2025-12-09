@@ -18,14 +18,15 @@ const FilterSection = () => {
         <div className="space-y-3">
           <Label className="text-sm font-semibold">Price Range (per night)</Label>
           <Slider 
-            defaultValue={[0, 50000]} 
-            max={100000} 
-            step={1000}
+            defaultValue={[500, 250000]} 
+            max={500000} 
+            min={500}
+            step={500}
             className="w-full"
           />
           <div className="flex justify-between text-sm text-muted-foreground">
-            <span>KES 0</span>
-            <span>KES 100,000</span>
+            <span>KES 500</span>
+            <span>KES 500,000+</span>
           </div>
         </div>
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 import PropertyCard from "@/components/PropertyCard";
 import FilterSection from "@/components/FilterSection";
 import SearchBar from "@/components/SearchBar";
@@ -144,6 +145,8 @@ const SearchResults = () => {
           </div>
         </div>
       </section>
+
+      <Footer />
     </div>
   );
 };
