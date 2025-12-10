@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 import PropertyCard from "@/components/PropertyCard";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -125,6 +126,8 @@ const Favorites = () => {
           )}
         </div>
       </section>
+
+      <Footer />
     </div>
   );
 };

@@ -1,1 +1,16 @@
 project_id = "dqpwklorobwbhvtevubz"
+
+[functions.create-stripe-checkout]
+verify_jwt = false
+
+[functions.stripe-webhook]
+verify_jwt = false
+
+[functions.initiate-mpesa-payment]
+verify_jwt = false
+
+[functions.mpesa-callback]
+verify_jwt = false
+
+[functions.chatbot]
+verify_jwt = false

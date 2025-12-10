@@ -16,11 +16,13 @@ interface Property {
   images: string[];
   property_type: string;
   max_guests: number;
+  amenities: string[];
 }
 
 const SearchResults = () => {
   const [searchParams] = useSearchParams();
   const [properties, setProperties] = useState<Property[]>([]);
+  const [filteredProperties, setFilteredProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
@@ -28,13 +30,22 @@ const SearchResults = () => {
   const checkIn = searchParams.get("checkIn");
   const checkOut = searchParams.get("checkOut");
   const guests = searchParams.get("guests");
+  const minPrice = searchParams.get("minPrice");
+  const maxPrice = searchParams.get("maxPrice");
+  const types = searchParams.get("types");
+  const amenities = searchParams.get("amenities");
 
   useEffect(() => {
     searchProperties();
   }, [location, checkIn, checkOut, guests]);
 
+  useEffect(() => {
+    applyFilters();
+  }, [properties, minPrice, maxPrice, types, amenities]);
+
   const searchProperties = async () => {
     try {
+      setLoading(true);
       let query = supabase
         .from("properties")
         .select("*")
@@ -74,6 +85,39 @@ const SearchResults = () => {
     }
   };
 
+  const applyFilters = () => {
+    let filtered = [...properties];
+
+    // Apply price filter
+    if (minPrice || maxPrice) {
+      const min = minPrice ? parseInt(minPrice) : 0;
+      const max = maxPrice ? parseInt(maxPrice) : Infinity;
+      filtered = filtered.filter(
+        (p) => p.price_per_night >= min && p.price_per_night <= max
+      );
+    }
+
+    // Apply property type filter
+    if (types) {
+      const typeList = types.toLowerCase().split(",");
+      filtered = filtered.filter((p) =>
+        typeList.includes(p.property_type.toLowerCase())
+      );
+    }
+
+    // Apply amenities filter
+    if (amenities) {
+      const amenityList = amenities.toLowerCase().split(",");
+      filtered = filtered.filter((p) =>
+        amenityList.every((amenity) =>
+          p.amenities?.some((a) => a.toLowerCase().includes(amenity))
+        )
+      );
+    }
+
+    setFilteredProperties(filtered);
+  };
+
   const filterAvailableProperties = async (properties: Property[], checkIn: string, checkOut: string) => {
     const propertyIds = properties.map(p => p.id);
 
@@ -87,6 +131,10 @@ const SearchResults = () => {
     const bookedPropertyIds = new Set(bookings?.map(b => b.property_id) || []);
     return properties.filter(p => !bookedPropertyIds.has(p.id));
   };
+
+  const displayProperties = minPrice || maxPrice || types || amenities 
+    ? filteredProperties 
+    : properties;
 
   return (
     <div className="min-h-screen bg-background">
@@ -105,7 +153,12 @@ const SearchResults = () => {
               {location ? `Properties in ${location}` : "Search Results"}
             </h1>
             <p className="text-muted-foreground">
-              {properties.length} properties found
+              {displayProperties.length} properties found
+              {(minPrice || maxPrice) && (
+                <span className="ml-2 text-primary">
+                  (Filtered by price: KES {minPrice || "0"} - KES {maxPrice || "500,000+"})
+                </span>
+              )}
             </p>
           </div>
           
@@ -119,14 +172,14 @@ const SearchResults = () => {
                 <div className="text-center py-12">
                   <p className="text-muted-foreground">Searching properties...</p>
                 </div>
-              ) : properties.length === 0 ? (
+              ) : displayProperties.length === 0 ? (
                 <div className="text-center py-12">
                   <p className="text-lg font-medium mb-2">No properties found</p>
-                  <p className="text-muted-foreground">Try adjusting your search criteria</p>
+                  <p className="text-muted-foreground">Try adjusting your search criteria or filters</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                  {properties.map((property) => (
+                  {displayProperties.map((property) => (
                     <PropertyCard
                       key={property.id}
                       id={property.id}
