@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 import Map from "@/components/Map";
 import ShareProperty from "@/components/ShareProperty";
 import PropertyReviews from "@/components/PropertyReviews";
@@ -16,7 +17,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { MapPin, Users, BedDouble, Bath, Star, Wifi, Coffee, CarFront, Shield, Calendar as CalendarIcon, Utensils, Briefcase } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { MapPin, Users, BedDouble, Bath, Star, Wifi, Coffee, CarFront, Shield, Calendar as CalendarIcon, Utensils, Briefcase, CreditCard, Smartphone } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 
 interface Property {
@@ -51,6 +53,7 @@ const PropertyDetails = () => {
   const [children, setChildren] = useState<{ age: number }[]>([]);
   const [specialRequests, setSpecialRequests] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState<"mpesa" | "card">("mpesa");
   const [booking, setBooking] = useState(false);
   const [isAvailable, setIsAvailable] = useState(true);
   const [checkingAvailability, setCheckingAvailability] = useState(false);
@@ -122,7 +125,7 @@ const PropertyDetails = () => {
       return;
     }
 
-    if (!phoneNumber || phoneNumber.length < 10) {
+    if (paymentMethod === "mpesa" && (!phoneNumber || phoneNumber.length < 10)) {
       toast({
         title: "Error",
         description: "Please enter a valid phone number for M-Pesa payment",
@@ -146,7 +149,6 @@ const PropertyDetails = () => {
 
     try {
       const nights = differenceInDays(checkOutDate, checkInDate);
-      // Children under 3 are free, count paying guests
       const payingChildren = children.filter(c => c.age >= 3).length;
       const payingGuests = adults + payingChildren;
       const totalPrice = nights * (property?.price_per_night || 0) * payingGuests;
@@ -177,7 +179,7 @@ const PropertyDetails = () => {
         .insert({
           booking_id: bookingData.id,
           amount: totalPrice,
-          payment_method: "mpesa",
+          payment_method: paymentMethod,
           payment_status: "pending",
         })
         .select()
@@ -185,28 +187,52 @@ const PropertyDetails = () => {
 
       if (paymentError) throw paymentError;
 
-      // Initiate M-Pesa payment
-      const { data: mpesaResponse, error: mpesaError } = await supabase.functions.invoke(
-        "initiate-mpesa-payment",
-        {
-          body: {
-            phone_number: phoneNumber,
-            amount: totalPrice,
-            booking_id: bookingData.id,
-            payment_id: paymentData.id,
-          },
+      if (paymentMethod === "mpesa") {
+        // Initiate M-Pesa payment
+        const { data: mpesaResponse, error: mpesaError } = await supabase.functions.invoke(
+          "initiate-mpesa-payment",
+          {
+            body: {
+              phone_number: phoneNumber,
+              amount: totalPrice,
+              booking_id: bookingData.id,
+              payment_id: paymentData.id,
+            },
+          }
+        );
+
+        if (mpesaError) throw mpesaError;
+
+        toast({
+          title: "Payment Initiated",
+          description: "Please check your phone for M-Pesa prompt",
+        });
+
+        pollPaymentStatus(paymentData.id, bookingData.id);
+      } else {
+        // Initiate Stripe payment
+        const { data: stripeResponse, error: stripeError } = await supabase.functions.invoke(
+          "create-stripe-checkout",
+          {
+            body: {
+              booking_id: bookingData.id,
+              payment_id: paymentData.id,
+              amount: totalPrice,
+              property_title: property?.title,
+              success_url: `${window.location.origin}/receipt/${bookingData.id}`,
+              cancel_url: window.location.href,
+            },
+          }
+        );
+
+        if (stripeError) throw stripeError;
+
+        if (stripeResponse?.url) {
+          window.location.href = stripeResponse.url;
+        } else {
+          throw new Error("Failed to create checkout session");
         }
-      );
-
-      if (mpesaError) throw mpesaError;
-
-      toast({
-        title: "Payment Initiated",
-        description: "Please check your phone for M-Pesa prompt",
-      });
-
-      // Poll for payment status
-      pollPaymentStatus(paymentData.id, bookingData.id);
+      }
     } catch (error: any) {
       console.error("Booking error:", error);
       toast({
@@ -219,7 +245,7 @@ const PropertyDetails = () => {
   };
 
   const pollPaymentStatus = async (paymentId: string, bookingId: string) => {
-    const maxAttempts = 60; // Poll for 60 seconds
+    const maxAttempts = 60;
     let attempts = 0;
 
     const interval = setInterval(async () => {
@@ -259,7 +285,6 @@ const PropertyDetails = () => {
   const calculateTotalPrice = () => {
     if (!checkInDate || !checkOutDate || !property) return 0;
     const nights = differenceInDays(checkOutDate, checkInDate);
-    // Children under 3 are free
     const payingChildren = children.filter(c => c.age >= 3).length;
     const payingGuests = adults + payingChildren;
     return nights * property.price_per_night * payingGuests;
@@ -558,16 +583,45 @@ const PropertyDetails = () => {
                   <p className="text-xs text-muted-foreground">Children under 3 years stay free!</p>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="phone">M-Pesa Phone Number</Label>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    placeholder="254XXXXXXXXX"
-                    value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value)}
-                  />
+                {/* Payment Method Selection */}
+                <div className="space-y-3">
+                  <Label>Payment Method</Label>
+                  <RadioGroup value={paymentMethod} onValueChange={(value: "mpesa" | "card") => setPaymentMethod(value)}>
+                    <div className="flex items-center space-x-2 p-3 border rounded-lg cursor-pointer hover:bg-muted/50">
+                      <RadioGroupItem value="mpesa" id="mpesa" />
+                      <Label htmlFor="mpesa" className="flex items-center gap-2 cursor-pointer flex-1">
+                        <Smartphone className="h-4 w-4 text-green-600" />
+                        <div>
+                          <p className="font-medium">M-Pesa</p>
+                          <p className="text-xs text-muted-foreground">Pay via mobile money</p>
+                        </div>
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2 p-3 border rounded-lg cursor-pointer hover:bg-muted/50">
+                      <RadioGroupItem value="card" id="card" />
+                      <Label htmlFor="card" className="flex items-center gap-2 cursor-pointer flex-1">
+                        <CreditCard className="h-4 w-4 text-blue-600" />
+                        <div>
+                          <p className="font-medium">Card Payment</p>
+                          <p className="text-xs text-muted-foreground">Visa, Mastercard (International)</p>
+                        </div>
+                      </Label>
+                    </div>
+                  </RadioGroup>
                 </div>
+
+                {paymentMethod === "mpesa" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">M-Pesa Phone Number</Label>
+                    <Input
+                      id="phone"
+                      type="tel"
+                      placeholder="254XXXXXXXXX"
+                      value={phoneNumber}
+                      onChange={(e) => setPhoneNumber(e.target.value)}
+                    />
+                  </div>
+                )}
 
                 <div className="space-y-2">
                   <Label htmlFor="requests">Special Requests (Optional)</Label>
@@ -622,7 +676,7 @@ const PropertyDetails = () => {
                   onClick={handleBooking}
                   disabled={booking || !isAvailable || checkingAvailability}
                 >
-                  {booking ? "Processing..." : !isAvailable ? "Unavailable" : "Book Now"}
+                  {booking ? "Processing..." : !isAvailable ? "Unavailable" : paymentMethod === "mpesa" ? "Pay with M-Pesa" : "Pay with Card"}
                 </Button>
               </CardContent>
             </Card>
@@ -636,6 +690,8 @@ const PropertyDetails = () => {
           priceRange={property.price_per_night}
         />
       </div>
+
+      <Footer />
     </div>
   );
 };
