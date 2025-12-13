@@ -145,14 +145,19 @@ const AdminDashboard = () => {
 
   const handleTogglePropertyStatus = async (propertyId: string, currentStatus: boolean) => {
     try {
+      // When deactivating, also set is_approved to false to ensure property doesn't show anywhere
+      const updateData = currentStatus 
+        ? { is_active: false, is_approved: false } 
+        : { is_active: true };
+      
       const { error } = await supabase
         .from("properties")
-        .update({ is_active: !currentStatus })
+        .update(updateData)
         .eq("id", propertyId);
 
       if (error) throw error;
 
-      toast.success(`Property ${!currentStatus ? "activated" : "deactivated"}`);
+      toast.success(`Property ${!currentStatus ? "activated" : "deactivated and hidden from listings"}`);
       fetchDashboardData();
     } catch (error) {
       toast.error("Failed to update property status");
