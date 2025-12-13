@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Loader2, CheckCircle, XCircle, Home, Users, CreditCard, TrendingUp } from "lucide-react";
 import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 
 const AdminDashboard = () => {
   const { user, loading: authLoading } = useAuth();
@@ -428,6 +429,8 @@ const AdminDashboard = () => {
           </TabsContent>
         </Tabs>
       </div>
+      
+      <Footer />
     </div>
   );
 };
