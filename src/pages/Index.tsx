@@ -5,6 +5,7 @@ import Footer from "@/components/Footer";
 import SearchBar from "@/components/SearchBar";
 import PropertyCard from "@/components/PropertyCard";
 import FilterSection from "@/components/FilterSection";
+import Marquee from "@/components/Marquee";
 import heroBg from "@/assets/hero-bg.jpg";
 import property1 from "@/assets/property-1.jpg";
 import { Button } from "@/components/ui/button";
@@ -55,6 +56,8 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       
+      {/* Marquee Advertisement */}
+      <Marquee />
       {/* Hero Section */}
       <section 
         className="relative h-[600px] flex items-center justify-center bg-cover bg-center"

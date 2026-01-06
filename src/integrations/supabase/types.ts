@@ -81,6 +81,30 @@ export type Database = {
           },
         ]
       }
+      online_users: {
+        Row: {
+          created_at: string
+          id: string
+          is_online: boolean | null
+          last_seen: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_online?: boolean | null
+          last_seen?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_online?: boolean | null
+          last_seen?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       payments: {
         Row: {
           amount: number
@@ -169,6 +193,7 @@ export type Database = {
           food_types: string[] | null
           host_id: string
           id: string
+          image_labels: string[] | null
           images: string[] | null
           is_active: boolean | null
           is_approved: boolean | null
@@ -176,10 +201,12 @@ export type Database = {
           location: string
           longitude: number | null
           max_guests: number
+          nearby_attractions: string[] | null
           price_per_night: number
           property_type: Database["public"]["Enums"]["property_type"]
           services: string[] | null
           title: string
+          transport_modes: string[] | null
           updated_at: string
         }
         Insert: {
@@ -192,6 +219,7 @@ export type Database = {
           food_types?: string[] | null
           host_id: string
           id?: string
+          image_labels?: string[] | null
           images?: string[] | null
           is_active?: boolean | null
           is_approved?: boolean | null
@@ -199,10 +227,12 @@ export type Database = {
           location: string
           longitude?: number | null
           max_guests: number
+          nearby_attractions?: string[] | null
           price_per_night: number
           property_type: Database["public"]["Enums"]["property_type"]
           services?: string[] | null
           title: string
+          transport_modes?: string[] | null
           updated_at?: string
         }
         Update: {
@@ -215,6 +245,7 @@ export type Database = {
           food_types?: string[] | null
           host_id?: string
           id?: string
+          image_labels?: string[] | null
           images?: string[] | null
           is_active?: boolean | null
           is_approved?: boolean | null
@@ -222,10 +253,12 @@ export type Database = {
           location?: string
           longitude?: number | null
           max_guests?: number
+          nearby_attractions?: string[] | null
           price_per_night?: number
           property_type?: Database["public"]["Enums"]["property_type"]
           services?: string[] | null
           title?: string
+          transport_modes?: string[] | null
           updated_at?: string
         }
         Relationships: [
@@ -337,6 +370,11 @@ export type Database = {
         | "villa"
         | "guesthouse"
         | "hostel"
+        | "airbnb"
+        | "rental"
+        | "resort"
+        | "motel"
+        | "restaurant"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -475,6 +513,11 @@ export const Constants = {
         "villa",
         "guesthouse",
         "hostel",
+        "airbnb",
+        "rental",
+        "resort",
+        "motel",
+        "restaurant",
       ],
     },
   },
