@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Loader2, CheckCircle, XCircle, Home, Users, CreditCard, TrendingUp } from "lucide-react";
+import { Loader2, CheckCircle, XCircle, Home, Users, CreditCard, TrendingUp, Trash2, Wifi } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
@@ -21,7 +21,8 @@ const AdminDashboard = () => {
   const [allProperties, setAllProperties] = useState<any[]>([]);
   const [bookings, setBookings] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
-  const [stats, setStats] = useState({ totalProperties: 0, totalBookings: 0, totalUsers: 0, totalRevenue: 0 });
+  const [onlineUsers, setOnlineUsers] = useState<any[]>([]);
+  const [stats, setStats] = useState({ totalProperties: 0, totalBookings: 0, totalUsers: 0, totalRevenue: 0, onlineCount: 0 });
 
   useEffect(() => {
     if (!authLoading) {
@@ -97,6 +98,15 @@ const AdminDashboard = () => {
 
       setUsers(usersData || []);
 
+      // Fetch online users
+      const { data: onlineData } = await supabase
+        .from("online_users")
+        .select("*, profiles(full_name, email)")
+        .eq("is_online", true)
+        .gte("last_seen", new Date(Date.now() - 5 * 60 * 1000).toISOString());
+
+      setOnlineUsers(onlineData || []);
+
       // Calculate stats
       const totalRevenue = bookingsData?.reduce((sum, b) => sum + Number(b.total_price), 0) || 0;
       setStats({
@@ -104,11 +114,30 @@ const AdminDashboard = () => {
         totalBookings: bookingsData?.length || 0,
         totalUsers: usersData?.length || 0,
         totalRevenue,
+        onlineCount: onlineData?.length || 0,
       });
     } catch (error) {
       toast.error("Failed to load dashboard data");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteProperty = async (propertyId: string) => {
+    if (!confirm("Are you sure you want to delete this property? This action cannot be undone.")) return;
+    
+    try {
+      const { error } = await supabase
+        .from("properties")
+        .delete()
+        .eq("id", propertyId);
+
+      if (error) throw error;
+
+      toast.success("Property deleted successfully");
+      fetchDashboardData();
+    } catch (error) {
+      toast.error("Failed to delete property");
     }
   };
 
@@ -235,6 +264,10 @@ const AdminDashboard = () => {
             <TabsTrigger value="properties">All Properties</TabsTrigger>
             <TabsTrigger value="bookings">Bookings</TabsTrigger>
             <TabsTrigger value="users">Users</TabsTrigger>
+            <TabsTrigger value="online" className="flex items-center gap-1">
+              <Wifi className="w-3 h-3 text-green-500" />
+              Online ({stats.onlineCount})
+            </TabsTrigger>
           </TabsList>
 
           {/* Pending Properties */}
@@ -334,16 +367,72 @@ const AdminDashboard = () => {
                         </TableCell>
                         <TableCell>KES {Number(property.price_per_night).toLocaleString()}</TableCell>
                         <TableCell>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleTogglePropertyStatus(property.id, property.is_active)}
-                          >
-                            {property.is_active ? "Deactivate" : "Activate"}
-                          </Button>
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleTogglePropertyStatus(property.id, property.is_active)}
+                            >
+                              {property.is_active ? "Deactivate" : "Activate"}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => handleDeleteProperty(property.id)}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Online Users */}
+          <TabsContent value="online">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Wifi className="h-5 w-5 text-green-500" />
+                  Online Users ({onlineUsers.length})
+                </CardTitle>
+                <CardDescription>Users active in the last 5 minutes</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>User</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Last Seen</TableHead>
+                      <TableHead>Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {onlineUsers.map((user) => (
+                      <TableRow key={user.id}>
+                        <TableCell className="font-medium">{user.profiles?.full_name || "N/A"}</TableCell>
+                        <TableCell>{user.profiles?.email}</TableCell>
+                        <TableCell>{new Date(user.last_seen).toLocaleTimeString()}</TableCell>
+                        <TableCell>
+                          <Badge className="bg-green-500">
+                            <Wifi className="w-3 h-3 mr-1" />
+                            Online
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {onlineUsers.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                          No users currently online
+                        </TableCell>
+                      </TableRow>
+                    )}
                   </TableBody>
                 </Table>
               </CardContent>

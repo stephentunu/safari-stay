@@ -9,6 +9,7 @@ import ShareProperty from "@/components/ShareProperty";
 import PropertyReviews from "@/components/PropertyReviews";
 import SimilarProperties from "@/components/SimilarProperties";
 import FavoriteButton from "@/components/FavoriteButton";
+import CurrencyConverter from "@/components/CurrencyConverter";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,7 +19,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { MapPin, Users, BedDouble, Bath, Star, Wifi, Coffee, CarFront, Shield, Calendar as CalendarIcon, Utensils, Briefcase, CreditCard, Smartphone } from "lucide-react";
+import { MapPin, Users, BedDouble, Bath, Star, Wifi, Coffee, CarFront, Shield, Calendar as CalendarIcon, Utensils, Briefcase, CreditCard, Smartphone, Navigation, Landmark, Car } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 
 interface Property {
@@ -35,6 +36,9 @@ interface Property {
   amenities: string[];
   food_types?: string[];
   services?: string[];
+  nearby_attractions?: string[];
+  transport_modes?: string[];
+  image_labels?: string[];
   host_id: string;
   latitude?: number;
   longitude?: number;
@@ -353,22 +357,32 @@ const PropertyDetails = () => {
           </div>
         </div>
 
-        {/* Images */}
+        {/* Images with labels */}
         <div className="grid grid-cols-4 gap-4 mb-8">
-          <div className="col-span-4 md:col-span-2 md:row-span-2">
+          <div className="col-span-4 md:col-span-2 md:row-span-2 relative">
             <img
               src={property.images[0]}
-              alt={property.title}
+              alt={property.image_labels?.[0] || property.title}
               className="w-full h-full object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
             />
+            {property.image_labels?.[0] && (
+              <Badge className="absolute bottom-2 left-2 bg-background/90 text-foreground">
+                {property.image_labels[0]}
+              </Badge>
+            )}
           </div>
           {property.images.slice(1, 5).map((image, index) => (
-            <div key={index} className="col-span-2 md:col-span-1">
+            <div key={index} className="col-span-2 md:col-span-1 relative">
               <img
                 src={image}
-                alt={`${property.title} ${index + 2}`}
+                alt={property.image_labels?.[index + 1] || `${property.title} ${index + 2}`}
                 className="w-full h-48 object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
               />
+              {property.image_labels?.[index + 1] && (
+                <Badge className="absolute bottom-2 left-2 bg-background/90 text-foreground text-xs">
+                  {property.image_labels[index + 1]}
+                </Badge>
+              )}
             </div>
           ))}
         </div>
@@ -451,6 +465,42 @@ const PropertyDetails = () => {
               </div>
             )}
 
+            {/* Nearby Attractions */}
+            {property.nearby_attractions && property.nearby_attractions.length > 0 && (
+              <div>
+                <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                  <Landmark className="h-5 w-5" />
+                  Nearby Attractions
+                </h2>
+                <div className="flex flex-wrap gap-2">
+                  {property.nearby_attractions.map((attraction, index) => (
+                    <Badge key={index} variant="outline" className="flex items-center gap-1 bg-blue-50 text-blue-700 border-blue-200">
+                      <MapPin className="h-3 w-3" />
+                      {attraction}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Transport Modes */}
+            {property.transport_modes && property.transport_modes.length > 0 && (
+              <div>
+                <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                  <Car className="h-5 w-5" />
+                  Available Transport
+                </h2>
+                <div className="flex flex-wrap gap-2">
+                  {property.transport_modes.map((mode, index) => (
+                    <Badge key={index} variant="outline" className="flex items-center gap-1 bg-green-50 text-green-700 border-green-200">
+                      <Navigation className="h-3 w-3" />
+                      {mode}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <Separator />
 
             {/* House Rules */}
@@ -498,6 +548,7 @@ const PropertyDetails = () => {
                   KES {property.price_per_night.toLocaleString()}
                   <span className="text-sm font-normal text-muted-foreground"> / night</span>
                 </CardTitle>
+                <CurrencyConverter priceKES={property.price_per_night} className="mt-2" />
                 <CardDescription>Book your stay</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">

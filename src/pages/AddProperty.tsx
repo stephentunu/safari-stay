@@ -11,17 +11,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGr
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { Loader2, Upload, X } from "lucide-react";
+import { Loader2, Upload, X, MapPin, Car } from "lucide-react";
 import { z } from "zod";
 import { KENYA_COUNTIES } from "@/data/kenyaLocations";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { NEARBY_ATTRACTIONS, TRANSPORT_MODES, IMAGE_LABELS, PROPERTY_TYPES } from "@/data/propertyOptions";
 
 const propertySchema = z.object({
   title: z.string().trim().min(5, "Title must be at least 5 characters").max(100),
   description: z.string().trim().min(20, "Description must be at least 20 characters").max(2000),
   location: z.string().trim().min(3, "Location is required").max(100),
   address: z.string().trim().min(5, "Address is required").max(200),
-  property_type: z.enum(["hotel", "apartment", "house", "villa", "guesthouse"]),
+  property_type: z.enum(["hotel", "apartment", "house", "villa", "guesthouse", "airbnb", "rental", "resort", "motel", "restaurant"]),
   price_per_night: z.number().min(1, "Price must be at least 1"),
   max_guests: z.number().min(1, "Must accommodate at least 1 guest").max(50),
   bedrooms: z.number().min(0).max(50),
@@ -69,11 +70,14 @@ const AddProperty = () => {
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [imageLabels, setImageLabels] = useState<string[]>([]);
   const [selectedCounty, setSelectedCounty] = useState<string>("");
   const [selectedSubCounty, setSelectedSubCounty] = useState<string>("");
   const [propertyCategory, setPropertyCategory] = useState<string>("");
   const [briefHistory, setBriefHistory] = useState<string>("");
   const [nearbyAttractions, setNearbyAttractions] = useState<string>("");
+  const [selectedAttractions, setSelectedAttractions] = useState<string[]>([]);
+  const [selectedTransportModes, setSelectedTransportModes] = useState<string[]>([]);
   
   const [formData, setFormData] = useState<PropertyFormData>({
     title: "",
@@ -166,6 +170,7 @@ const AddProperty = () => {
   const removeImage = (index: number) => {
     setImageFiles(prev => prev.filter((_, i) => i !== index));
     setImagePreviews(prev => prev.filter((_, i) => i !== index));
+    setImageLabels(prev => prev.filter((_, i) => i !== index));
   };
 
   const toggleAmenity = (amenity: string) => {
@@ -190,6 +195,30 @@ const AddProperty = () => {
         ? prev.filter(s => s !== service)
         : [...prev, service]
     );
+  };
+
+  const toggleAttraction = (attraction: string) => {
+    setSelectedAttractions(prev => 
+      prev.includes(attraction) 
+        ? prev.filter(a => a !== attraction)
+        : [...prev, attraction]
+    );
+  };
+
+  const toggleTransportMode = (mode: string) => {
+    setSelectedTransportModes(prev => 
+      prev.includes(mode) 
+        ? prev.filter(m => m !== mode)
+        : [...prev, mode]
+    );
+  };
+
+  const updateImageLabel = (index: number, label: string) => {
+    setImageLabels(prev => {
+      const updated = [...prev];
+      updated[index] = label;
+      return updated;
+    });
   };
 
   const uploadImages = async (propertyId: string): Promise<string[]> => {
@@ -266,6 +295,9 @@ const AddProperty = () => {
           amenities: validatedData.amenities,
           food_types: selectedFoodTypes,
           services: selectedServices,
+          nearby_attractions: selectedAttractions,
+          transport_modes: selectedTransportModes,
+          image_labels: imageLabels,
           images: [],
         })
         .select()
@@ -373,11 +405,11 @@ const AddProperty = () => {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="bg-popover z-50">
-                      <SelectItem value="hotel">Hotel</SelectItem>
-                      <SelectItem value="apartment">Apartment</SelectItem>
-                      <SelectItem value="house">House</SelectItem>
-                      <SelectItem value="villa">Villa</SelectItem>
-                      <SelectItem value="guesthouse">Guest House</SelectItem>
+                      {PROPERTY_TYPES.map((type) => (
+                        <SelectItem key={type.value} value={type.value}>
+                          {type.label}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -407,14 +439,58 @@ const AddProperty = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="attractions">{t("property.nearbyAttractions")}</Label>
+                <Label htmlFor="attractions">{t("property.nearbyAttractions")} (Additional notes)</Label>
                 <Textarea
                   id="attractions"
                   value={nearbyAttractions}
                   onChange={(e) => setNearbyAttractions(e.target.value)}
                   placeholder="e.g., 5 min walk to Uhuru Park, Near Moi Avenue, Close to KICC..."
-                  rows={3}
+                  rows={2}
                 />
+              </div>
+
+              {/* Nearby Attractions Selection */}
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4" />
+                  Nearby Attractions (Select all that apply)
+                </Label>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                  {NEARBY_ATTRACTIONS.map((attraction) => (
+                    <Button
+                      key={attraction}
+                      type="button"
+                      variant={selectedAttractions.includes(attraction) ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => toggleAttraction(attraction)}
+                      className="justify-start text-xs"
+                    >
+                      {attraction}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Transport Modes Selection */}
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <Car className="h-4 w-4" />
+                  Available Transport Modes
+                </Label>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                  {TRANSPORT_MODES.map((mode) => (
+                    <Button
+                      key={mode}
+                      type="button"
+                      variant={selectedTransportModes.includes(mode) ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => toggleTransportMode(mode)}
+                      className="justify-start text-xs"
+                    >
+                      {mode}
+                    </Button>
+                  ))}
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -587,7 +663,7 @@ const AddProperty = () => {
               )}
 
               <div className="space-y-2">
-                <Label>{t("property.images")} * (Max 10)</Label>
+                <Label>{t("property.images")} * (Max 10 - Label each room/area)</Label>
                 <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
                   <input
                     type="file"
@@ -600,7 +676,7 @@ const AddProperty = () => {
                   <label htmlFor="image-upload" className="cursor-pointer">
                     <Upload className="h-12 w-12 mx-auto mb-2 text-muted-foreground" />
                     <p className="text-sm text-muted-foreground">
-                      Click to upload images or drag and drop
+                      Click to upload images (Bedroom, Kitchen, Dining, Parking, etc.)
                     </p>
                   </label>
                 </div>
@@ -608,12 +684,27 @@ const AddProperty = () => {
                 {imagePreviews.length > 0 && (
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
                     {imagePreviews.map((preview, index) => (
-                      <div key={index} className="relative">
+                      <div key={index} className="relative space-y-2">
                         <img
                           src={preview}
                           alt={`Preview ${index + 1}`}
                           className="w-full h-32 object-cover rounded-lg"
                         />
+                        <Select
+                          value={imageLabels[index] || ""}
+                          onValueChange={(value) => updateImageLabel(index, value)}
+                        >
+                          <SelectTrigger className="h-8 text-xs">
+                            <SelectValue placeholder="Select room/area" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-popover z-50">
+                            {IMAGE_LABELS.map((label) => (
+                              <SelectItem key={label} value={label} className="text-xs">
+                                {label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                         <Button
                           type="button"
                           variant="destructive"
