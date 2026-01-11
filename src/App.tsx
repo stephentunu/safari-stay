@@ -18,6 +18,7 @@ import Terms from "./pages/Terms";
 import NotFound from "./pages/NotFound";
 import Chatbot from "./components/Chatbot";
 import NotificationPrompt from "./components/NotificationPrompt";
+import OnlineUsersTracker from "./components/OnlineUsersTracker";
 
 const queryClient = new QueryClient();
 
@@ -45,6 +46,7 @@ const App = () => (
           </Routes>
           <Chatbot />
           <NotificationPrompt />
+          <OnlineUsersTracker />
         </BrowserRouter>
       </TooltipProvider>
     </LanguageProvider>
