@@ -9,13 +9,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { Loader2, Upload, X, MapPin, Car } from "lucide-react";
+import { Loader2, Upload, X, MapPin, Car, Bed, UtensilsCrossed } from "lucide-react";
 import { z } from "zod";
 import { KENYA_COUNTIES } from "@/data/kenyaLocations";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { NEARBY_ATTRACTIONS, TRANSPORT_MODES, IMAGE_LABELS, PROPERTY_TYPES } from "@/data/propertyOptions";
+import { NEARBY_ATTRACTIONS, TRANSPORT_MODES, IMAGE_LABELS, PROPERTY_TYPES, BOARD_TYPES, ROOM_CATEGORIES, BED_TYPES } from "@/data/propertyOptions";
 
 const propertySchema = z.object({
   title: z.string().trim().min(5, "Title must be at least 5 characters").max(100),
@@ -31,6 +32,13 @@ const propertySchema = z.object({
 });
 
 type PropertyFormData = z.infer<typeof propertySchema>;
+
+interface RoomCategoryPrice {
+  category: string;
+  label: string;
+  single_price: number;
+  double_price: number;
+}
 
 const AMENITIES_LIST = [
   "WiFi", "Parking", "Air Conditioning", "Kitchen", "TV", "Washer", 
@@ -79,6 +87,12 @@ const AddProperty = () => {
   const [selectedAttractions, setSelectedAttractions] = useState<string[]>([]);
   const [selectedTransportModes, setSelectedTransportModes] = useState<string[]>([]);
   
+  // New states for room/board configuration
+  const [boardType, setBoardType] = useState<string>("standard");
+  const [selectedBedTypes, setSelectedBedTypes] = useState<string[]>([]);
+  const [roomCategoryPrices, setRoomCategoryPrices] = useState<RoomCategoryPrice[]>([]);
+  const [enableRoomCategories, setEnableRoomCategories] = useState(false);
+  
   const [formData, setFormData] = useState<PropertyFormData>({
     title: "",
     description: "",
@@ -91,6 +105,8 @@ const AddProperty = () => {
     bathrooms: 1,
     amenities: [],
   });
+
+  const isHotelType = ["hotel", "guesthouse", "resort", "motel"].includes(formData.property_type);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -113,9 +129,9 @@ const AddProperty = () => {
           .select("role")
           .eq("user_id", user.id)
           .eq("role", "host")
-          .single();
+          .maybeSingle();
 
-        if (error && error.code !== "PGRST116") throw error;
+        if (error) throw error;
         
         if (data) {
           setIsHost(true);
@@ -143,6 +159,20 @@ const AddProperty = () => {
       checkHostRole();
     }
   }, [user, toast]);
+
+  // Initialize room category prices when enabling
+  useEffect(() => {
+    if (enableRoomCategories && roomCategoryPrices.length === 0) {
+      setRoomCategoryPrices(
+        ROOM_CATEGORIES.map(cat => ({
+          category: cat.value,
+          label: cat.label,
+          single_price: formData.price_per_night || 0,
+          double_price: Math.round((formData.price_per_night || 0) * 1.5),
+        }))
+      );
+    }
+  }, [enableRoomCategories, formData.price_per_night]);
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -213,6 +243,24 @@ const AddProperty = () => {
     );
   };
 
+  const toggleBedType = (bedType: string) => {
+    setSelectedBedTypes(prev => 
+      prev.includes(bedType) 
+        ? prev.filter(b => b !== bedType)
+        : [...prev, bedType]
+    );
+  };
+
+  const updateRoomCategoryPrice = (category: string, field: 'single_price' | 'double_price', value: number) => {
+    setRoomCategoryPrices(prev => 
+      prev.map(rcp => 
+        rcp.category === category 
+          ? { ...rcp, [field]: value }
+          : rcp
+      )
+    );
+  };
+
   const updateImageLabel = (index: number, label: string) => {
     setImageLabels(prev => {
       const updated = [...prev];
@@ -279,27 +327,37 @@ const AddProperty = () => {
         return;
       }
 
+      // Prepare room categories for storage
+      const roomCategoriesData = enableRoomCategories && isHotelType
+        ? roomCategoryPrices.filter(rcp => rcp.single_price > 0 || rcp.double_price > 0)
+        : [];
+
+      const insertData: Record<string, any> = {
+        host_id: user.id,
+        title: validatedData.title,
+        description: validatedData.description,
+        location: validatedData.location,
+        address: validatedData.address,
+        property_type: validatedData.property_type,
+        price_per_night: validatedData.price_per_night,
+        max_guests: validatedData.max_guests,
+        bedrooms: validatedData.bedrooms,
+        bathrooms: validatedData.bathrooms,
+        amenities: validatedData.amenities,
+        food_types: selectedFoodTypes,
+        services: selectedServices,
+        nearby_attractions: selectedAttractions,
+        transport_modes: selectedTransportModes,
+        image_labels: imageLabels,
+        images: [],
+        board_type: isHotelType ? boardType : null,
+        room_categories: roomCategoriesData,
+        bed_types: selectedBedTypes,
+      };
+
       const { data: property, error: propertyError } = await supabase
         .from("properties")
-        .insert({
-          host_id: user.id,
-          title: validatedData.title,
-          description: validatedData.description,
-          location: validatedData.location,
-          address: validatedData.address,
-          property_type: validatedData.property_type,
-          price_per_night: validatedData.price_per_night,
-          max_guests: validatedData.max_guests,
-          bedrooms: validatedData.bedrooms,
-          bathrooms: validatedData.bathrooms,
-          amenities: validatedData.amenities,
-          food_types: selectedFoodTypes,
-          services: selectedServices,
-          nearby_attractions: selectedAttractions,
-          transport_modes: selectedTransportModes,
-          image_labels: imageLabels,
-          images: [],
-        })
+        .insert(insertData as any)
         .select()
         .single();
 
@@ -558,7 +616,7 @@ const AddProperty = () => {
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="price">{t("property.price")} *</Label>
+                  <Label htmlFor="price">{t("property.price")} (Base) *</Label>
                   <Input
                     id="price"
                     type="number"
@@ -606,6 +664,109 @@ const AddProperty = () => {
                 </div>
               </div>
 
+              {/* Hotel-specific: Board Type and Room Categories */}
+              {isHotelType && (
+                <div className="space-y-6 p-4 border rounded-lg bg-muted/30">
+                  <h3 className="font-semibold flex items-center gap-2">
+                    <UtensilsCrossed className="h-5 w-5" />
+                    Hotel Booking Options
+                  </h3>
+
+                  {/* Board Type */}
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2">Board Type *</Label>
+                    <Select value={boardType} onValueChange={setBoardType}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select board type" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-popover z-50">
+                        {BOARD_TYPES.map((board) => (
+                          <SelectItem key={board.value} value={board.value}>
+                            {board.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">
+                      Fully Board = Breakfast + Lunch + Supper | Half Board = Breakfast/Lunch + Supper | Standard = Supper Only
+                    </p>
+                  </div>
+
+                  {/* Bed Types */}
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2">
+                      <Bed className="h-4 w-4" />
+                      Available Bed Types
+                    </Label>
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+                      {BED_TYPES.map((bed) => (
+                        <Button
+                          key={bed.value}
+                          type="button"
+                          variant={selectedBedTypes.includes(bed.value) ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => toggleBedType(bed.value)}
+                          className="justify-start text-xs"
+                        >
+                          {bed.label}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Room Categories with Pricing */}
+                  <div className="space-y-3">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="enableRoomCategories" 
+                        checked={enableRoomCategories}
+                        onCheckedChange={(checked) => setEnableRoomCategories(checked as boolean)}
+                      />
+                      <Label htmlFor="enableRoomCategories" className="cursor-pointer">
+                        Enable Room Categories with Different Pricing
+                      </Label>
+                    </div>
+
+                    {enableRoomCategories && (
+                      <div className="space-y-3 mt-4">
+                        <p className="text-sm text-muted-foreground">
+                          Set prices for each room category and bed type combination (KES per night)
+                        </p>
+                        <div className="grid gap-3">
+                          {roomCategoryPrices.map((rcp) => (
+                            <div key={rcp.category} className="grid grid-cols-3 gap-2 items-center p-3 border rounded-lg">
+                              <div className="font-medium text-sm">{rcp.label}</div>
+                              <div className="space-y-1">
+                                <Label className="text-xs text-muted-foreground">Single Bed</Label>
+                                <Input
+                                  type="number"
+                                  min="0"
+                                  value={rcp.single_price || ""}
+                                  onChange={(e) => updateRoomCategoryPrice(rcp.category, 'single_price', Number(e.target.value))}
+                                  placeholder="Single price"
+                                  className="h-8"
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <Label className="text-xs text-muted-foreground">Double Bed</Label>
+                                <Input
+                                  type="number"
+                                  min="0"
+                                  value={rcp.double_price || ""}
+                                  onChange={(e) => updateRoomCategoryPrice(rcp.category, 'double_price', Number(e.target.value))}
+                                  placeholder="Double price"
+                                  className="h-8"
+                                />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               <div className="space-y-2">
                 <Label>{t("property.amenities")} * (Select at least one)</Label>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
@@ -642,7 +803,7 @@ const AddProperty = () => {
                 </div>
               </div>
 
-              {(formData.property_type === "hotel" || formData.property_type === "guesthouse") && (
+              {isHotelType && (
                 <div className="space-y-2">
                   <Label>{t("property.foodTypes")} (Optional - for hotels/restaurants)</Label>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-2">

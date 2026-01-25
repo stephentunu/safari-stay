@@ -16,13 +16,18 @@ export type Database = {
     Tables: {
       bookings: {
         Row: {
+          adults: number | null
+          bed_type: string | null
+          board_type: string | null
           check_in_date: string
           check_out_date: string
+          children_details: Json | null
           created_at: string
           guests: number
           host_id: string
           id: string
           property_id: string
+          room_category: string | null
           special_requests: string | null
           status: Database["public"]["Enums"]["booking_status"]
           total_price: number
@@ -30,13 +35,18 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          adults?: number | null
+          bed_type?: string | null
+          board_type?: string | null
           check_in_date: string
           check_out_date: string
+          children_details?: Json | null
           created_at?: string
           guests: number
           host_id: string
           id?: string
           property_id: string
+          room_category?: string | null
           special_requests?: string | null
           status?: Database["public"]["Enums"]["booking_status"]
           total_price: number
@@ -44,13 +54,18 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          adults?: number | null
+          bed_type?: string | null
+          board_type?: string | null
           check_in_date?: string
           check_out_date?: string
+          children_details?: Json | null
           created_at?: string
           guests?: number
           host_id?: string
           id?: string
           property_id?: string
+          room_category?: string | null
           special_requests?: string | null
           status?: Database["public"]["Enums"]["booking_status"]
           total_price?: number
@@ -187,7 +202,10 @@ export type Database = {
           address: string
           amenities: string[] | null
           bathrooms: number
+          bed_types: string[] | null
           bedrooms: number
+          board_type: string | null
+          child_free_age: number | null
           created_at: string
           description: string
           food_types: string[] | null
@@ -204,6 +222,7 @@ export type Database = {
           nearby_attractions: string[] | null
           price_per_night: number
           property_type: Database["public"]["Enums"]["property_type"]
+          room_categories: Json | null
           services: string[] | null
           title: string
           transport_modes: string[] | null
@@ -213,7 +232,10 @@ export type Database = {
           address: string
           amenities?: string[] | null
           bathrooms: number
+          bed_types?: string[] | null
           bedrooms: number
+          board_type?: string | null
+          child_free_age?: number | null
           created_at?: string
           description: string
           food_types?: string[] | null
@@ -230,6 +252,7 @@ export type Database = {
           nearby_attractions?: string[] | null
           price_per_night: number
           property_type: Database["public"]["Enums"]["property_type"]
+          room_categories?: Json | null
           services?: string[] | null
           title: string
           transport_modes?: string[] | null
@@ -239,7 +262,10 @@ export type Database = {
           address?: string
           amenities?: string[] | null
           bathrooms?: number
+          bed_types?: string[] | null
           bedrooms?: number
+          board_type?: string | null
+          child_free_age?: number | null
           created_at?: string
           description?: string
           food_types?: string[] | null
@@ -256,6 +282,7 @@ export type Database = {
           nearby_attractions?: string[] | null
           price_per_night?: number
           property_type?: Database["public"]["Enums"]["property_type"]
+          room_categories?: Json | null
           services?: string[] | null
           title?: string
           transport_modes?: string[] | null

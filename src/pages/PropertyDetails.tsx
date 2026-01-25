@@ -19,8 +19,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { MapPin, Users, BedDouble, Bath, Star, Wifi, Coffee, CarFront, Shield, Calendar as CalendarIcon, Utensils, Briefcase, CreditCard, Smartphone, Navigation, Landmark, Car } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { MapPin, Users, BedDouble, Bath, Star, Wifi, Coffee, CarFront, Shield, Calendar as CalendarIcon, Utensils, Briefcase, CreditCard, Smartphone, Navigation, Landmark, Car, Bed, UtensilsCrossed } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
+import { BOARD_TYPES, ROOM_CATEGORIES, BED_TYPES } from "@/data/propertyOptions";
+
+interface RoomCategoryPrice {
+  category: string;
+  label: string;
+  single_price: number;
+  double_price: number;
+}
 
 interface Property {
   id: string;
@@ -43,6 +52,10 @@ interface Property {
   latitude?: number;
   longitude?: number;
   property_type: string;
+  board_type?: string;
+  room_categories?: RoomCategoryPrice[];
+  bed_types?: string[];
+  child_free_age?: number;
 }
 
 const PropertyDetails = () => {
@@ -62,6 +75,14 @@ const PropertyDetails = () => {
   const [isAvailable, setIsAvailable] = useState(true);
   const [checkingAvailability, setCheckingAvailability] = useState(false);
 
+  // New states for room/board selection
+  const [selectedBoardType, setSelectedBoardType] = useState<string>("");
+  const [selectedRoomCategory, setSelectedRoomCategory] = useState<string>("");
+  const [selectedBedType, setSelectedBedType] = useState<string>("");
+
+  const isHotelType = property ? ["hotel", "guesthouse", "resort", "motel"].includes(property.property_type) : false;
+  const childFreeAge = property?.child_free_age || 10;
+
   useEffect(() => {
     if (id) {
       fetchProperty();
@@ -73,6 +94,19 @@ const PropertyDetails = () => {
       checkAvailability();
     }
   }, [checkInDate, checkOutDate, id]);
+
+  // Set default board type when property loads
+  useEffect(() => {
+    if (property && isHotelType) {
+      setSelectedBoardType(property.board_type || "standard");
+      if (property.bed_types && property.bed_types.length > 0) {
+        setSelectedBedType(property.bed_types[0]);
+      }
+      if (property.room_categories && property.room_categories.length > 0) {
+        setSelectedRoomCategory(property.room_categories[0].category);
+      }
+    }
+  }, [property, isHotelType]);
 
   const checkAvailability = async () => {
     if (!checkInDate || !checkOutDate) return;
@@ -105,7 +139,16 @@ const PropertyDetails = () => {
         .single();
 
       if (error) throw error;
-      setProperty(data);
+      
+      // Parse room_categories if it's a string
+      const parsedData = {
+        ...data,
+        room_categories: typeof data.room_categories === 'string' 
+          ? JSON.parse(data.room_categories) 
+          : data.room_categories
+      };
+      
+      setProperty(parsedData);
     } catch (error: any) {
       console.error("Error fetching property:", error);
       toast({
@@ -153,12 +196,10 @@ const PropertyDetails = () => {
 
     try {
       const nights = differenceInDays(checkOutDate, checkInDate);
-      const payingChildren = children.filter(c => c.age >= 3).length;
-      const payingGuests = adults + payingChildren;
-      const totalPrice = nights * (property?.price_per_night || 0) * payingGuests;
+      const totalPrice = calculateTotalPrice();
       const totalGuests = adults + children.length;
 
-      // Create booking
+      // Create booking with room/board details
       const { data: bookingData, error: bookingError } = await supabase
         .from("bookings")
         .insert({
@@ -171,6 +212,11 @@ const PropertyDetails = () => {
           total_price: totalPrice,
           special_requests: specialRequests,
           status: "pending",
+          board_type: isHotelType ? selectedBoardType : null,
+          room_category: isHotelType && selectedRoomCategory ? selectedRoomCategory : null,
+          bed_type: isHotelType && selectedBedType ? selectedBedType : null,
+          adults: adults,
+          children_details: children,
         })
         .select()
         .single();
@@ -286,12 +332,35 @@ const PropertyDetails = () => {
     }, 1000);
   };
 
+  const getSelectedRoomPrice = (): number => {
+    if (!property) return 0;
+    
+    // If room categories are enabled and selected
+    if (isHotelType && property.room_categories && property.room_categories.length > 0 && selectedRoomCategory) {
+      const roomCat = property.room_categories.find(rc => rc.category === selectedRoomCategory);
+      if (roomCat) {
+        if (selectedBedType === "single") {
+          return roomCat.single_price || property.price_per_night;
+        } else if (selectedBedType === "double") {
+          return roomCat.double_price || property.price_per_night;
+        }
+      }
+    }
+    
+    return property.price_per_night;
+  };
+
   const calculateTotalPrice = () => {
     if (!checkInDate || !checkOutDate || !property) return 0;
+    
     const nights = differenceInDays(checkOutDate, checkInDate);
-    const payingChildren = children.filter(c => c.age >= 3).length;
+    const pricePerNight = getSelectedRoomPrice();
+    
+    // Children below childFreeAge are free
+    const payingChildren = children.filter(c => c.age >= childFreeAge).length;
     const payingGuests = adults + payingChildren;
-    return nights * property.price_per_night * payingGuests;
+    
+    return nights * pricePerNight * payingGuests;
   };
 
   const addChild = () => {
@@ -308,8 +377,20 @@ const PropertyDetails = () => {
     setChildren(updated);
   };
 
-  const getFreeChildrenCount = () => children.filter(c => c.age < 3).length;
-  const getPayingChildrenCount = () => children.filter(c => c.age >= 3).length;
+  const getFreeChildrenCount = () => children.filter(c => c.age < childFreeAge).length;
+  const getPayingChildrenCount = () => children.filter(c => c.age >= childFreeAge).length;
+
+  const getBoardTypeLabel = (value: string) => {
+    return BOARD_TYPES.find(b => b.value === value)?.label || value;
+  };
+
+  const getRoomCategoryLabel = (value: string) => {
+    return ROOM_CATEGORIES.find(r => r.value === value)?.label || value;
+  };
+
+  const getBedTypeLabel = (value: string) => {
+    return BED_TYPES.find(b => b.value === value)?.label || value;
+  };
 
   const amenityIcons: { [key: string]: any } = {
     wifi: Wifi,
@@ -333,6 +414,7 @@ const PropertyDetails = () => {
   }
 
   const nights = checkInDate && checkOutDate ? differenceInDays(checkOutDate, checkInDate) : 0;
+  const pricePerNight = getSelectedRoomPrice();
 
   return (
     <div className="min-h-screen bg-background">
@@ -347,6 +429,12 @@ const PropertyDetails = () => {
               <Shield className="h-3 w-3" />
               Verified
             </Badge>
+            {property.board_type && isHotelType && (
+              <Badge variant="outline" className="gap-1 bg-orange-50 text-orange-700 border-orange-200">
+                <UtensilsCrossed className="h-3 w-3" />
+                {getBoardTypeLabel(property.board_type)}
+              </Badge>
+            )}
           </div>
           <div className="flex items-center gap-2">
             <ShareProperty 
@@ -501,6 +589,31 @@ const PropertyDetails = () => {
               </div>
             )}
 
+            {/* Available Room Types for Hotels */}
+            {isHotelType && property.room_categories && property.room_categories.length > 0 && (
+              <div>
+                <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                  <Bed className="h-5 w-5" />
+                  Available Room Types
+                </h2>
+                <div className="grid gap-3">
+                  {property.room_categories.map((room, index) => (
+                    <div key={index} className="p-4 border rounded-lg bg-muted/30">
+                      <h3 className="font-medium">{room.label}</h3>
+                      <div className="flex gap-4 mt-2 text-sm text-muted-foreground">
+                        {room.single_price > 0 && (
+                          <span>Single: KES {room.single_price.toLocaleString()}/night</span>
+                        )}
+                        {room.double_price > 0 && (
+                          <span>Double: KES {room.double_price.toLocaleString()}/night</span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <Separator />
 
             {/* House Rules */}
@@ -518,6 +631,7 @@ const PropertyDetails = () => {
                 <li>• No smoking inside the property</li>
                 <li>• No parties or events without permission</li>
                 <li>• Pets may be allowed (contact host)</li>
+                <li className="text-green-600 font-medium">• Children under {childFreeAge} years stay FREE!</li>
               </ul>
             </div>
 
@@ -545,13 +659,78 @@ const PropertyDetails = () => {
             <Card className="sticky top-4">
               <CardHeader>
                 <CardTitle className="text-2xl">
-                  KES {property.price_per_night.toLocaleString()}
+                  KES {pricePerNight.toLocaleString()}
                   <span className="text-sm font-normal text-muted-foreground"> / night</span>
                 </CardTitle>
-                <CurrencyConverter priceKES={property.price_per_night} className="mt-2" />
+                <CurrencyConverter priceKES={pricePerNight} className="mt-2" />
                 <CardDescription>Book your stay</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
+                {/* Room/Board Selection for Hotels */}
+                {isHotelType && (
+                  <div className="space-y-4 p-3 border rounded-lg bg-muted/30">
+                    <h4 className="font-medium flex items-center gap-2">
+                      <UtensilsCrossed className="h-4 w-4" />
+                      Room & Board Options
+                    </h4>
+                    
+                    {/* Board Type Selection */}
+                    <div className="space-y-2">
+                      <Label className="text-sm">Board Type</Label>
+                      <Select value={selectedBoardType} onValueChange={setSelectedBoardType}>
+                        <SelectTrigger className="h-9">
+                          <SelectValue placeholder="Select board type" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-popover z-50">
+                          {BOARD_TYPES.map((board) => (
+                            <SelectItem key={board.value} value={board.value}>
+                              {board.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Room Category Selection */}
+                    {property.room_categories && property.room_categories.length > 0 && (
+                      <div className="space-y-2">
+                        <Label className="text-sm">Room Category</Label>
+                        <Select value={selectedRoomCategory} onValueChange={setSelectedRoomCategory}>
+                          <SelectTrigger className="h-9">
+                            <SelectValue placeholder="Select room category" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-popover z-50">
+                            {property.room_categories.map((room) => (
+                              <SelectItem key={room.category} value={room.category}>
+                                {room.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+
+                    {/* Bed Type Selection */}
+                    {property.bed_types && property.bed_types.length > 0 && (
+                      <div className="space-y-2">
+                        <Label className="text-sm">Bed Type</Label>
+                        <Select value={selectedBedType} onValueChange={setSelectedBedType}>
+                          <SelectTrigger className="h-9">
+                            <SelectValue placeholder="Select bed type" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-popover z-50">
+                            {property.bed_types.map((bed) => (
+                              <SelectItem key={bed} value={bed}>
+                                {getBedTypeLabel(bed)}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <div className="space-y-2">
                   <Label>Check-in Date</Label>
                   <Calendar
@@ -615,7 +794,7 @@ const PropertyDetails = () => {
                             placeholder="Age"
                           />
                           <span className="text-sm text-muted-foreground">years</span>
-                          {child.age < 3 && (
+                          {child.age < childFreeAge && (
                             <Badge variant="secondary" className="text-xs bg-green-100 text-green-700">FREE</Badge>
                           )}
                           <Button 
@@ -631,7 +810,7 @@ const PropertyDetails = () => {
                       ))}
                     </div>
                   )}
-                  <p className="text-xs text-muted-foreground">Children under 3 years stay free!</p>
+                  <p className="text-xs text-muted-foreground">Children under {childFreeAge} years stay free!</p>
                 </div>
 
                 {/* Payment Method Selection */}
@@ -686,19 +865,35 @@ const PropertyDetails = () => {
 
                 {nights > 0 && (
                   <div className="border-t pt-4 space-y-2">
+                    {isHotelType && selectedBoardType && (
+                      <div className="flex justify-between text-sm text-muted-foreground">
+                        <span>Board: {getBoardTypeLabel(selectedBoardType)}</span>
+                      </div>
+                    )}
+                    {isHotelType && selectedRoomCategory && (
+                      <div className="flex justify-between text-sm text-muted-foreground">
+                        <span>Room: {getRoomCategoryLabel(selectedRoomCategory)}</span>
+                      </div>
+                    )}
+                    {isHotelType && selectedBedType && (
+                      <div className="flex justify-between text-sm text-muted-foreground">
+                        <span>Bed: {getBedTypeLabel(selectedBedType)}</span>
+                      </div>
+                    )}
+                    <Separator className="my-2" />
                     <div className="flex justify-between text-sm">
-                      <span>{adults} adult{adults > 1 ? 's' : ''} x {nights} nights</span>
-                      <span>KES {(property.price_per_night * nights * adults).toLocaleString()}</span>
+                      <span>{adults} adult{adults > 1 ? 's' : ''} x {nights} nights @ KES {pricePerNight.toLocaleString()}</span>
+                      <span>KES {(pricePerNight * nights * adults).toLocaleString()}</span>
                     </div>
                     {getPayingChildrenCount() > 0 && (
                       <div className="flex justify-between text-sm">
-                        <span>{getPayingChildrenCount()} child{getPayingChildrenCount() > 1 ? 'ren' : ''} (3+ yrs) x {nights} nights</span>
-                        <span>KES {(property.price_per_night * nights * getPayingChildrenCount()).toLocaleString()}</span>
+                        <span>{getPayingChildrenCount()} child{getPayingChildrenCount() > 1 ? 'ren' : ''} ({childFreeAge}+ yrs) x {nights} nights</span>
+                        <span>KES {(pricePerNight * nights * getPayingChildrenCount()).toLocaleString()}</span>
                       </div>
                     )}
                     {getFreeChildrenCount() > 0 && (
                       <div className="flex justify-between text-sm text-green-600">
-                        <span>{getFreeChildrenCount()} child{getFreeChildrenCount() > 1 ? 'ren' : ''} (under 3 yrs)</span>
+                        <span>{getFreeChildrenCount()} child{getFreeChildrenCount() > 1 ? 'ren' : ''} (under {childFreeAge} yrs)</span>
                         <span>FREE</span>
                       </div>
                     )}
