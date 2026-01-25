@@ -1,3 +1,28 @@
+// Board Types
+export const BOARD_TYPES = [
+  { value: "fully_board", label: "Fully Board (Breakfast + Lunch + Supper)" },
+  { value: "half_board", label: "Half Board (Breakfast/Lunch + Supper)" },
+  { value: "standard", label: "Standard (Supper Only)" },
+];
+
+// Room Categories with sub-types
+export const ROOM_CATEGORIES = [
+  { value: "junior_executive_deluxe", label: "Junior Executive Deluxe", tier: "Executive" },
+  { value: "executive_standard", label: "Executive Standard", tier: "Executive" },
+  { value: "superior_deluxe", label: "Superior Deluxe", tier: "Executive" },
+  { value: "standard", label: "Standard Room", tier: "Standard" },
+  { value: "economy", label: "Economy Room", tier: "Economy" },
+];
+
+// Bed Types
+export const BED_TYPES = [
+  { value: "single", label: "Single Bed" },
+  { value: "double", label: "Double Bed" },
+  { value: "twin", label: "Twin Beds" },
+  { value: "king", label: "King Size Bed" },
+  { value: "queen", label: "Queen Size Bed" },
+];
+
 export const NEARBY_ATTRACTIONS = [
   "Library",
   "Museum",
