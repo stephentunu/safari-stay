@@ -201,12 +201,14 @@ export type Database = {
         Row: {
           address: string
           amenities: string[] | null
+          attraction_details: Json | null
           bathrooms: number
           bed_types: string[] | null
           bedrooms: number
           board_type: string | null
           child_free_age: number | null
           created_at: string
+          custom_board_types: Json | null
           description: string
           food_types: string[] | null
           host_id: string
@@ -221,6 +223,7 @@ export type Database = {
           max_guests: number
           nearby_attractions: string[] | null
           price_per_night: number
+          property_rules: string[] | null
           property_type: Database["public"]["Enums"]["property_type"]
           room_categories: Json | null
           services: string[] | null
@@ -231,12 +234,14 @@ export type Database = {
         Insert: {
           address: string
           amenities?: string[] | null
+          attraction_details?: Json | null
           bathrooms: number
           bed_types?: string[] | null
           bedrooms: number
           board_type?: string | null
           child_free_age?: number | null
           created_at?: string
+          custom_board_types?: Json | null
           description: string
           food_types?: string[] | null
           host_id: string
@@ -251,6 +256,7 @@ export type Database = {
           max_guests: number
           nearby_attractions?: string[] | null
           price_per_night: number
+          property_rules?: string[] | null
           property_type: Database["public"]["Enums"]["property_type"]
           room_categories?: Json | null
           services?: string[] | null
@@ -261,12 +267,14 @@ export type Database = {
         Update: {
           address?: string
           amenities?: string[] | null
+          attraction_details?: Json | null
           bathrooms?: number
           bed_types?: string[] | null
           bedrooms?: number
           board_type?: string | null
           child_free_age?: number | null
           created_at?: string
+          custom_board_types?: Json | null
           description?: string
           food_types?: string[] | null
           host_id?: string
@@ -281,6 +289,7 @@ export type Database = {
           max_guests?: number
           nearby_attractions?: string[] | null
           price_per_night?: number
+          property_rules?: string[] | null
           property_type?: Database["public"]["Enums"]["property_type"]
           room_categories?: Json | null
           services?: string[] | null

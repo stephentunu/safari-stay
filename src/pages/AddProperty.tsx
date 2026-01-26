@@ -17,6 +17,9 @@ import { z } from "zod";
 import { KENYA_COUNTIES } from "@/data/kenyaLocations";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { NEARBY_ATTRACTIONS, TRANSPORT_MODES, IMAGE_LABELS, PROPERTY_TYPES, BOARD_TYPES, ROOM_CATEGORIES, BED_TYPES } from "@/data/propertyOptions";
+import AttractionNameInput from "@/components/property/AttractionNameInput";
+import CustomBoardTypeInput from "@/components/property/CustomBoardTypeInput";
+import PropertyRulesInput from "@/components/property/PropertyRulesInput";
 
 const propertySchema = z.object({
   title: z.string().trim().min(5, "Title must be at least 5 characters").max(100),
@@ -38,6 +41,13 @@ interface RoomCategoryPrice {
   label: string;
   single_price: number;
   double_price: number;
+}
+
+interface CustomBoardType {
+  id: string;
+  name: string;
+  description: string;
+  price_adjustment: number;
 }
 
 const AMENITIES_LIST = [
@@ -92,6 +102,11 @@ const AddProperty = () => {
   const [selectedBedTypes, setSelectedBedTypes] = useState<string[]>([]);
   const [roomCategoryPrices, setRoomCategoryPrices] = useState<RoomCategoryPrice[]>([]);
   const [enableRoomCategories, setEnableRoomCategories] = useState(false);
+  
+  // New states for attraction names, custom board types, and property rules
+  const [attractionDetails, setAttractionDetails] = useState<Record<string, string>>({});
+  const [customBoardTypes, setCustomBoardTypes] = useState<CustomBoardType[]>([]);
+  const [propertyRules, setPropertyRules] = useState<string[]>([]);
   
   const [formData, setFormData] = useState<PropertyFormData>({
     title: "",
@@ -228,11 +243,42 @@ const AddProperty = () => {
   };
 
   const toggleAttraction = (attraction: string) => {
-    setSelectedAttractions(prev => 
-      prev.includes(attraction) 
-        ? prev.filter(a => a !== attraction)
-        : [...prev, attraction]
-    );
+    if (selectedAttractions.includes(attraction)) {
+      // Remove attraction and its details
+      setSelectedAttractions(prev => prev.filter(a => a !== attraction));
+      setAttractionDetails(prev => {
+        const updated = { ...prev };
+        delete updated[attraction];
+        return updated;
+      });
+    } else {
+      // Add attraction
+      setSelectedAttractions(prev => [...prev, attraction]);
+    }
+  };
+
+  const updateAttractionName = (attraction: string, name: string) => {
+    setAttractionDetails(prev => ({
+      ...prev,
+      [attraction]: name,
+    }));
+  };
+
+  const removeAttraction = (attraction: string) => {
+    setSelectedAttractions(prev => prev.filter(a => a !== attraction));
+    setAttractionDetails(prev => {
+      const updated = { ...prev };
+      delete updated[attraction];
+      return updated;
+    });
+  };
+
+  const addCustomBoardType = (boardType: CustomBoardType) => {
+    setCustomBoardTypes(prev => [...prev, boardType]);
+  };
+
+  const removeCustomBoardType = (id: string) => {
+    setCustomBoardTypes(prev => prev.filter(bt => bt.id !== id));
   };
 
   const toggleTransportMode = (mode: string) => {
@@ -353,6 +399,9 @@ const AddProperty = () => {
         board_type: isHotelType ? boardType : null,
         room_categories: roomCategoriesData,
         bed_types: selectedBedTypes,
+        attraction_details: attractionDetails,
+        custom_board_types: customBoardTypes,
+        property_rules: propertyRules,
       };
 
       const { data: property, error: propertyError } = await supabase
@@ -508,7 +557,7 @@ const AddProperty = () => {
               </div>
 
               {/* Nearby Attractions Selection */}
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label className="flex items-center gap-2">
                   <MapPin className="h-4 w-4" />
                   Nearby Attractions (Select all that apply)
@@ -527,6 +576,26 @@ const AddProperty = () => {
                     </Button>
                   ))}
                 </div>
+                
+                {/* Attraction Name Inputs */}
+                {selectedAttractions.length > 0 && (
+                  <div className="space-y-2 mt-4">
+                    <Label className="text-sm text-muted-foreground">
+                      Enter specific names for selected attractions:
+                    </Label>
+                    <div className="grid gap-2">
+                      {selectedAttractions.map((attraction) => (
+                        <AttractionNameInput
+                          key={attraction}
+                          attraction={attraction}
+                          name={attractionDetails[attraction] || ""}
+                          onNameChange={updateAttractionName}
+                          onRemove={removeAttraction}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Transport Modes Selection */}
@@ -764,8 +833,21 @@ const AddProperty = () => {
                       </div>
                     )}
                   </div>
+
+                  {/* Custom Board Types */}
+                  <CustomBoardTypeInput
+                    customBoardTypes={customBoardTypes}
+                    onAdd={addCustomBoardType}
+                    onRemove={removeCustomBoardType}
+                  />
                 </div>
               )}
+
+              {/* Property Rules & Regulations */}
+              <PropertyRulesInput
+                rules={propertyRules}
+                onRulesChange={setPropertyRules}
+              />
 
               <div className="space-y-2">
                 <Label>{t("property.amenities")} * (Select at least one)</Label>

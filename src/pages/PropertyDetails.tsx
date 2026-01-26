@@ -56,6 +56,16 @@ interface Property {
   room_categories?: RoomCategoryPrice[];
   bed_types?: string[];
   child_free_age?: number;
+  attraction_details?: Record<string, string>;
+  custom_board_types?: CustomBoardType[];
+  property_rules?: string[];
+}
+
+interface CustomBoardType {
+  id: string;
+  name: string;
+  description: string;
+  price_adjustment: number;
 }
 
 const PropertyDetails = () => {
@@ -140,13 +150,20 @@ const PropertyDetails = () => {
 
       if (error) throw error;
       
-      // Parse room_categories if it's a string
+      // Parse JSON fields if they're strings
       const parsedData = {
         ...data,
         room_categories: typeof data.room_categories === 'string' 
           ? JSON.parse(data.room_categories) 
-          : data.room_categories
-      };
+          : data.room_categories || [],
+        attraction_details: (typeof data.attraction_details === 'object' && data.attraction_details !== null)
+          ? data.attraction_details as Record<string, string>
+          : {},
+        custom_board_types: typeof data.custom_board_types === 'string'
+          ? JSON.parse(data.custom_board_types)
+          : (Array.isArray(data.custom_board_types) ? data.custom_board_types : []),
+        property_rules: data.property_rules || [],
+      } as Property;
       
       setProperty(parsedData);
     } catch (error: any) {
@@ -354,7 +371,15 @@ const PropertyDetails = () => {
     if (!checkInDate || !checkOutDate || !property) return 0;
     
     const nights = differenceInDays(checkOutDate, checkInDate);
-    const pricePerNight = getSelectedRoomPrice();
+    let pricePerNight = getSelectedRoomPrice();
+    
+    // Add custom board type price adjustment if applicable
+    if (isHotelType && selectedBoardType && property.custom_board_types) {
+      const customBoard = property.custom_board_types.find(c => c.id === selectedBoardType);
+      if (customBoard && customBoard.price_adjustment) {
+        pricePerNight += customBoard.price_adjustment;
+      }
+    }
     
     // Children below childFreeAge are free
     const payingChildren = children.filter(c => c.age >= childFreeAge).length;
@@ -381,7 +406,17 @@ const PropertyDetails = () => {
   const getPayingChildrenCount = () => children.filter(c => c.age >= childFreeAge).length;
 
   const getBoardTypeLabel = (value: string) => {
-    return BOARD_TYPES.find(b => b.value === value)?.label || value;
+    // Check standard board types first
+    const standardBoard = BOARD_TYPES.find(b => b.value === value);
+    if (standardBoard) return standardBoard.label;
+    
+    // Check custom board types
+    if (property?.custom_board_types) {
+      const customBoard = property.custom_board_types.find(c => c.id === value);
+      if (customBoard) return customBoard.name;
+    }
+    
+    return value;
   };
 
   const getRoomCategoryLabel = (value: string) => {
@@ -560,13 +595,21 @@ const PropertyDetails = () => {
                   <Landmark className="h-5 w-5" />
                   Nearby Attractions
                 </h2>
-                <div className="flex flex-wrap gap-2">
-                  {property.nearby_attractions.map((attraction, index) => (
-                    <Badge key={index} variant="outline" className="flex items-center gap-1 bg-blue-50 text-blue-700 border-blue-200">
-                      <MapPin className="h-3 w-3" />
-                      {attraction}
-                    </Badge>
-                  ))}
+                <div className="space-y-2">
+                  {property.nearby_attractions.map((attraction, index) => {
+                    const specificName = property.attraction_details?.[attraction];
+                    return (
+                      <div key={index} className="flex items-start gap-3 p-3 bg-muted/30 rounded-lg">
+                        <MapPin className="h-4 w-4 mt-1 text-primary" />
+                        <div>
+                          <span className="font-medium">{attraction}</span>
+                          {specificName && (
+                            <span className="text-muted-foreground"> - {specificName}</span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -618,7 +661,7 @@ const PropertyDetails = () => {
 
             {/* House Rules */}
             <div>
-              <h2 className="text-xl font-semibold mb-4">House Rules</h2>
+              <h2 className="text-xl font-semibold mb-4">Property Rules & Regulations</h2>
               <ul className="space-y-2 text-muted-foreground">
                 <li className="flex items-center gap-2">
                   <CalendarIcon className="h-4 w-4" />
@@ -628,9 +671,21 @@ const PropertyDetails = () => {
                   <CalendarIcon className="h-4 w-4" />
                   Check-out: Before 11:00 AM
                 </li>
-                <li>• No smoking inside the property</li>
-                <li>• No parties or events without permission</li>
-                <li>• Pets may be allowed (contact host)</li>
+                {/* Property-specific rules */}
+                {property.property_rules && property.property_rules.length > 0 ? (
+                  property.property_rules.map((rule, index) => (
+                    <li key={index} className="flex items-start gap-2">
+                      <span className="text-primary">•</span>
+                      {rule}
+                    </li>
+                  ))
+                ) : (
+                  <>
+                    <li>• No smoking inside the property</li>
+                    <li>• No parties or events without permission</li>
+                    <li>• Pets may be allowed (contact host)</li>
+                  </>
+                )}
                 <li className="text-green-600 font-medium">• Children under {childFreeAge} years stay FREE!</li>
               </ul>
             </div>
@@ -682,13 +737,34 @@ const PropertyDetails = () => {
                           <SelectValue placeholder="Select board type" />
                         </SelectTrigger>
                         <SelectContent className="bg-popover z-50">
+                          {/* Standard board types */}
                           {BOARD_TYPES.map((board) => (
                             <SelectItem key={board.value} value={board.value}>
                               {board.label}
                             </SelectItem>
                           ))}
+                          {/* Custom board types from property */}
+                          {property.custom_board_types && property.custom_board_types.length > 0 && (
+                            <>
+                              {property.custom_board_types.map((custom) => (
+                                <SelectItem key={custom.id} value={custom.id}>
+                                  {custom.name} {custom.price_adjustment !== 0 && (
+                                    <span className="text-xs text-muted-foreground">
+                                      ({custom.price_adjustment > 0 ? '+' : ''}KES {custom.price_adjustment.toLocaleString()})
+                                    </span>
+                                  )}
+                                </SelectItem>
+                              ))}
+                            </>
+                          )}
                         </SelectContent>
                       </Select>
+                      {/* Show custom board type description if selected */}
+                      {property.custom_board_types?.find(c => c.id === selectedBoardType)?.description && (
+                        <p className="text-xs text-muted-foreground">
+                          {property.custom_board_types.find(c => c.id === selectedBoardType)?.description}
+                        </p>
+                      )}
                     </div>
 
                     {/* Room Category Selection */}

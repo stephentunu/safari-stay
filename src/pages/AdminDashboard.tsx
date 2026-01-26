@@ -173,10 +173,13 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleTogglePropertyStatus = async (propertyId: string, currentStatus: boolean) => {
+  const handleTogglePropertyStatus = async (propertyId: string, currentStatus: boolean | null) => {
+    // Convert null to false for comparison purposes
+    const isCurrentlyActive = currentStatus === true;
+    
     try {
       // When deactivating, also set is_approved to false to ensure property doesn't show anywhere
-      const updateData = currentStatus 
+      const updateData = isCurrentlyActive 
         ? { is_active: false, is_approved: false } 
         : { is_active: true };
       
@@ -185,12 +188,16 @@ const AdminDashboard = () => {
         .update(updateData)
         .eq("id", propertyId);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error updating property status:", error);
+        throw error;
+      }
 
-      toast.success(`Property ${!currentStatus ? "activated" : "deactivated and hidden from listings"}`);
-      fetchDashboardData();
-    } catch (error) {
-      toast.error("Failed to update property status");
+      toast.success(`Property ${!isCurrentlyActive ? "activated" : "deactivated and hidden from listings"}`);
+      await fetchDashboardData();
+    } catch (error: any) {
+      console.error("Failed to update property status:", error);
+      toast.error(error.message || "Failed to update property status");
     }
   };
 
