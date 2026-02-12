@@ -87,6 +87,12 @@ const Navbar = () => {
             >
               {t("nav.listProperty")}
             </NavLink>
+            <NavLink 
+              to="/request-property" 
+              className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+            >
+              Request Property
+            </NavLink>
             {isAdmin && (
               <NavLink 
                 to="/admin" 
@@ -160,6 +166,12 @@ const Navbar = () => {
                   className="text-base font-medium text-foreground hover:text-primary transition-colors py-2"
                 >
                   {t("nav.listProperty")}
+                </NavLink>
+                <NavLink 
+                  to="/request-property" 
+                  className="text-base font-medium text-muted-foreground hover:text-primary transition-colors py-2"
+                >
+                  Request Property
                 </NavLink>
                 {isAdmin && (
                   <NavLink 

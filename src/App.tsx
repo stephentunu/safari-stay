@@ -15,6 +15,8 @@ import Favorites from "./pages/Favorites";
 import SearchResults from "./pages/SearchResults";
 import AdminDashboard from "./pages/AdminDashboard";
 import Terms from "./pages/Terms";
+import RequestProperty from "./pages/RequestProperty";
+import HostProfile from "./pages/HostProfile";
 import NotFound from "./pages/NotFound";
 import Chatbot from "./components/Chatbot";
 import NotificationPrompt from "./components/NotificationPrompt";
@@ -41,6 +43,8 @@ const App = () => (
             <Route path="/search" element={<SearchResults />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/terms" element={<Terms />} />
+            <Route path="/request-property" element={<RequestProperty />} />
+            <Route path="/host/:hostId" element={<HostProfile />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
