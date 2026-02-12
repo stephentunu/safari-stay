@@ -9,6 +9,7 @@ import ShareProperty from "@/components/ShareProperty";
 import PropertyReviews from "@/components/PropertyReviews";
 import SimilarProperties from "@/components/SimilarProperties";
 import FavoriteButton from "@/components/FavoriteButton";
+import ImageGallery from "@/components/ImageGallery";
 import CurrencyConverter from "@/components/CurrencyConverter";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -480,35 +481,12 @@ const PropertyDetails = () => {
           </div>
         </div>
 
-        {/* Images with labels */}
-        <div className="grid grid-cols-4 gap-4 mb-8">
-          <div className="col-span-4 md:col-span-2 md:row-span-2 relative">
-            <img
-              src={property.images[0]}
-              alt={property.image_labels?.[0] || property.title}
-              className="w-full h-full object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
-            />
-            {property.image_labels?.[0] && (
-              <Badge className="absolute bottom-2 left-2 bg-background/90 text-foreground">
-                {property.image_labels[0]}
-              </Badge>
-            )}
-          </div>
-          {property.images.slice(1, 5).map((image, index) => (
-            <div key={index} className="col-span-2 md:col-span-1 relative">
-              <img
-                src={image}
-                alt={property.image_labels?.[index + 1] || `${property.title} ${index + 2}`}
-                className="w-full h-48 object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
-              />
-              {property.image_labels?.[index + 1] && (
-                <Badge className="absolute bottom-2 left-2 bg-background/90 text-foreground text-xs">
-                  {property.image_labels[index + 1]}
-                </Badge>
-              )}
-            </div>
-          ))}
-        </div>
+        {/* Image Gallery */}
+        <ImageGallery 
+          images={property.images} 
+          labels={property.image_labels} 
+          title={property.title} 
+        />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Property Details */}

@@ -96,6 +96,27 @@ export type Database = {
           },
         ]
       }
+      newsletter_subscribers: {
+        Row: {
+          email: string
+          id: string
+          is_active: boolean
+          subscribed_at: string
+        }
+        Insert: {
+          email: string
+          id?: string
+          is_active?: boolean
+          subscribed_at?: string
+        }
+        Update: {
+          email?: string
+          id?: string
+          is_active?: boolean
+          subscribed_at?: string
+        }
+        Relationships: []
+      }
       online_users: {
         Row: {
           created_at: string
@@ -171,8 +192,13 @@ export type Database = {
           created_at: string
           email: string
           full_name: string | null
+          host_since: string | null
           id: string
+          is_verified_host: boolean | null
+          languages: string[] | null
           phone: string | null
+          response_rate: number | null
+          response_time: string | null
           updated_at: string
         }
         Insert: {
@@ -181,8 +207,13 @@ export type Database = {
           created_at?: string
           email: string
           full_name?: string | null
+          host_since?: string | null
           id: string
+          is_verified_host?: boolean | null
+          languages?: string[] | null
           phone?: string | null
+          response_rate?: number | null
+          response_time?: string | null
           updated_at?: string
         }
         Update: {
@@ -191,8 +222,13 @@ export type Database = {
           created_at?: string
           email?: string
           full_name?: string | null
+          host_since?: string | null
           id?: string
+          is_verified_host?: boolean | null
+          languages?: string[] | null
           phone?: string | null
+          response_rate?: number | null
+          response_time?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -206,6 +242,7 @@ export type Database = {
           bed_types: string[] | null
           bedrooms: number
           board_type: string | null
+          cancellation_policy: string | null
           child_free_age: number | null
           created_at: string
           custom_board_types: Json | null
@@ -239,6 +276,7 @@ export type Database = {
           bed_types?: string[] | null
           bedrooms: number
           board_type?: string | null
+          cancellation_policy?: string | null
           child_free_age?: number | null
           created_at?: string
           custom_board_types?: Json | null
@@ -272,6 +310,7 @@ export type Database = {
           bed_types?: string[] | null
           bedrooms?: number
           board_type?: string | null
+          cancellation_policy?: string | null
           child_free_age?: number | null
           created_at?: string
           custom_board_types?: Json | null
@@ -307,33 +346,107 @@ export type Database = {
           },
         ]
       }
+      property_requests: {
+        Row: {
+          bedrooms: number | null
+          budget_max: number | null
+          budget_min: number | null
+          created_at: string
+          description: string | null
+          email: string
+          id: string
+          location: string
+          name: string
+          phone: string | null
+          property_type: string
+          status: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          bedrooms?: number | null
+          budget_max?: number | null
+          budget_min?: number | null
+          created_at?: string
+          description?: string | null
+          email: string
+          id?: string
+          location: string
+          name: string
+          phone?: string | null
+          property_type: string
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          bedrooms?: number | null
+          budget_max?: number | null
+          budget_min?: number | null
+          created_at?: string
+          description?: string | null
+          email?: string
+          id?: string
+          location?: string
+          name?: string
+          phone?: string | null
+          property_type?: string
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_requests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reviews: {
         Row: {
           booking_id: string
+          cleanliness_score: number | null
           comment: string | null
           created_at: string
+          facilities_score: number | null
           id: string
+          location_score: number | null
           property_id: string
           rating: number
           reviewer_id: string
+          service_score: number | null
+          value_score: number | null
         }
         Insert: {
           booking_id: string
+          cleanliness_score?: number | null
           comment?: string | null
           created_at?: string
+          facilities_score?: number | null
           id?: string
+          location_score?: number | null
           property_id: string
           rating: number
           reviewer_id: string
+          service_score?: number | null
+          value_score?: number | null
         }
         Update: {
           booking_id?: string
+          cleanliness_score?: number | null
           comment?: string | null
           created_at?: string
+          facilities_score?: number | null
           id?: string
+          location_score?: number | null
           property_id?: string
           rating?: number
           reviewer_id?: string
+          service_score?: number | null
+          value_score?: number | null
         }
         Relationships: [
           {

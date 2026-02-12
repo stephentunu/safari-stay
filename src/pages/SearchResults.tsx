@@ -5,6 +5,7 @@ import Footer from "@/components/Footer";
 import PropertyCard from "@/components/PropertyCard";
 import FilterSection from "@/components/FilterSection";
 import SearchBar from "@/components/SearchBar";
+import SortControls from "@/components/SortControls";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -17,6 +18,7 @@ interface Property {
   property_type: string;
   max_guests: number;
   amenities: string[];
+  created_at: string;
 }
 
 const SearchResults = () => {
@@ -24,6 +26,7 @@ const SearchResults = () => {
   const [properties, setProperties] = useState<Property[]>([]);
   const [filteredProperties, setFilteredProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sortBy, setSortBy] = useState("recommended");
   const { toast } = useToast();
 
   const location = searchParams.get("location");
@@ -41,7 +44,7 @@ const SearchResults = () => {
 
   useEffect(() => {
     applyFilters();
-  }, [properties, minPrice, maxPrice, types, amenities]);
+  }, [properties, minPrice, maxPrice, types, amenities, sortBy]);
 
   const searchProperties = async () => {
     try {
@@ -52,21 +55,12 @@ const SearchResults = () => {
         .eq("is_approved", true)
         .eq("is_active", true);
 
-      // Filter by location if provided
-      if (location) {
-        query = query.ilike("location", `%${location}%`);
-      }
-
-      // Filter by guest capacity if provided
-      if (guests) {
-        query = query.gte("max_guests", parseInt(guests));
-      }
+      if (location) query = query.ilike("location", `%${location}%`);
+      if (guests) query = query.gte("max_guests", parseInt(guests));
 
       const { data, error } = await query;
-
       if (error) throw error;
 
-      // Filter out properties with overlapping bookings
       if (checkIn && checkOut && data) {
         const availableProperties = await filterAvailableProperties(data, checkIn, checkOut);
         setProperties(availableProperties);
@@ -75,11 +69,7 @@ const SearchResults = () => {
       }
     } catch (error: any) {
       console.error("Error searching properties:", error);
-      toast({
-        title: "Error",
-        description: "Failed to search properties",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: "Failed to search properties", variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -88,39 +78,42 @@ const SearchResults = () => {
   const applyFilters = () => {
     let filtered = [...properties];
 
-    // Apply price filter
     if (minPrice || maxPrice) {
       const min = minPrice ? parseInt(minPrice) : 0;
       const max = maxPrice ? parseInt(maxPrice) : Infinity;
-      filtered = filtered.filter(
-        (p) => p.price_per_night >= min && p.price_per_night <= max
-      );
+      filtered = filtered.filter((p) => p.price_per_night >= min && p.price_per_night <= max);
     }
 
-    // Apply property type filter
     if (types) {
       const typeList = types.toLowerCase().split(",");
-      filtered = filtered.filter((p) =>
-        typeList.includes(p.property_type.toLowerCase())
-      );
+      filtered = filtered.filter((p) => typeList.includes(p.property_type.toLowerCase()));
     }
 
-    // Apply amenities filter
     if (amenities) {
       const amenityList = amenities.toLowerCase().split(",");
       filtered = filtered.filter((p) =>
-        amenityList.every((amenity) =>
-          p.amenities?.some((a) => a.toLowerCase().includes(amenity))
-        )
+        amenityList.every((amenity) => p.amenities?.some((a) => a.toLowerCase().includes(amenity)))
       );
+    }
+
+    // Apply sorting
+    switch (sortBy) {
+      case "price_low":
+        filtered.sort((a, b) => a.price_per_night - b.price_per_night);
+        break;
+      case "price_high":
+        filtered.sort((a, b) => b.price_per_night - a.price_per_night);
+        break;
+      case "newest":
+        filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        break;
     }
 
     setFilteredProperties(filtered);
   };
 
   const filterAvailableProperties = async (properties: Property[], checkIn: string, checkOut: string) => {
-    const propertyIds = properties.map(p => p.id);
-
+    const propertyIds = properties.map((p) => p.id);
     const { data: bookings } = await supabase
       .from("bookings")
       .select("property_id")
@@ -128,19 +121,19 @@ const SearchResults = () => {
       .in("status", ["pending", "confirmed"])
       .or(`and(check_in_date.lte.${checkOut},check_out_date.gte.${checkIn})`);
 
-    const bookedPropertyIds = new Set(bookings?.map(b => b.property_id) || []);
-    return properties.filter(p => !bookedPropertyIds.has(p.id));
+    const bookedPropertyIds = new Set(bookings?.map((b) => b.property_id) || []);
+    return properties.filter((p) => !bookedPropertyIds.has(p.id));
   };
 
-  const displayProperties = minPrice || maxPrice || types || amenities 
-    ? filteredProperties 
+  const displayProperties = minPrice || maxPrice || types || amenities || sortBy !== "recommended"
+    ? filteredProperties
     : properties;
 
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      
-      <section className="py-8 bg-muted/30">
+
+      <section className="py-8 bg-muted/30 mt-16">
         <div className="container mx-auto px-4">
           <SearchBar />
         </div>
@@ -148,26 +141,20 @@ const SearchResults = () => {
 
       <section className="py-12">
         <div className="container mx-auto px-4">
-          <div className="mb-8">
+          <div className="mb-4">
             <h1 className="text-3xl font-bold mb-2">
               {location ? `Properties in ${location}` : "Search Results"}
             </h1>
-            <p className="text-muted-foreground">
-              {displayProperties.length} properties found
-              {(minPrice || maxPrice) && (
-                <span className="ml-2 text-primary">
-                  (Filtered by price: KES {minPrice || "0"} - KES {maxPrice || "500,000+"})
-                </span>
-              )}
-            </p>
           </div>
-          
+
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
             <div className="lg:col-span-1">
               <FilterSection />
             </div>
-            
+
             <div className="lg:col-span-3">
+              <SortControls value={sortBy} onChange={setSortBy} resultCount={displayProperties.length} />
+
               {loading ? (
                 <div className="text-center py-12">
                   <p className="text-muted-foreground">Searching properties...</p>

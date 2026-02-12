@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Sparkles, Shield, CreditCard, Headphones } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import NewsletterSignup from "@/components/NewsletterSignup";
 
 interface Property {
   id: string;
@@ -141,6 +142,7 @@ const Index = () => {
                         key={property.id}
                         id={property.id}
                         image={property.images[0] || property1}
+                        images={property.images}
                         title={property.title}
                         location={property.location}
                         price={property.price_per_night}
@@ -177,6 +179,7 @@ const Index = () => {
         </div>
       </section>
 
+      <NewsletterSignup />
       <Footer />
     </div>
   );
