@@ -7,7 +7,11 @@ import { PROPERTY_TYPES } from "@/data/propertyOptions";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-const SearchBar = () => {
+interface SearchBarProps {
+  onSearch?: (params: URLSearchParams) => void;
+}
+
+const SearchBar = ({ onSearch }: SearchBarProps = {}) => {
   const navigate = useNavigate();
   const [keyword, setKeyword] = useState("");
   const [selectedCounty, setSelectedCounty] = useState<string>("");
@@ -32,7 +36,11 @@ const SearchBar = () => {
     if (guests) params.append("guests", guests);
     if (maxPrice) params.append("maxPrice", maxPrice);
 
-    navigate(`/search?${params.toString()}`);
+    if (onSearch) {
+      onSearch(params);
+    } else {
+      navigate(`/search?${params.toString()}`);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
