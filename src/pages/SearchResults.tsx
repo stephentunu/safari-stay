@@ -29,6 +29,7 @@ const SearchResults = () => {
   const [sortBy, setSortBy] = useState("recommended");
   const { toast } = useToast();
 
+  const keyword = searchParams.get("keyword");
   const location = searchParams.get("location");
   const checkIn = searchParams.get("checkIn");
   const checkOut = searchParams.get("checkOut");
@@ -40,7 +41,7 @@ const SearchResults = () => {
 
   useEffect(() => {
     searchProperties();
-  }, [location, checkIn, checkOut, guests]);
+  }, [keyword, location, checkIn, checkOut, guests, types, maxPrice]);
 
   useEffect(() => {
     applyFilters();
@@ -56,6 +57,18 @@ const SearchResults = () => {
         .eq("is_active", true);
 
       if (location) query = query.ilike("location", `%${location}%`);
+      if (keyword) {
+        query = query.or(`title.ilike.%${keyword}%,description.ilike.%${keyword}%`);
+      }
+      if (types) {
+        const typeList = types.split(",");
+        if (typeList.length === 1) {
+          query = query.eq("property_type", typeList[0] as any);
+        } else {
+          query = query.in("property_type", typeList as any[]);
+        }
+      }
+      if (maxPrice && !minPrice) query = query.lte("price_per_night", parseInt(maxPrice));
       if (guests) query = query.gte("max_guests", parseInt(guests));
 
       const { data, error } = await query;
@@ -143,7 +156,7 @@ const SearchResults = () => {
         <div className="container mx-auto px-4">
           <div className="mb-4">
             <h1 className="text-3xl font-bold mb-2">
-              {location ? `Properties in ${location}` : "Search Results"}
+              {keyword && location ? `"${keyword}" in ${location}` : keyword ? `Results for "${keyword}"` : location ? `Properties in ${location}` : "Search Results"}
             </h1>
           </div>
 
