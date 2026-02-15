@@ -1,46 +1,72 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MapPin, Calendar, Users, Search } from "lucide-react";
+import { MapPin, Calendar, Users, Search, Building, DollarSign } from "lucide-react";
 import { KENYA_COUNTIES } from "@/data/kenyaLocations";
+import { PROPERTY_TYPES } from "@/data/propertyOptions";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 const SearchBar = () => {
   const navigate = useNavigate();
+  const [keyword, setKeyword] = useState("");
   const [selectedCounty, setSelectedCounty] = useState<string>("");
   const [selectedSubCounty, setSelectedSubCounty] = useState<string>("");
+  const [propertyType, setPropertyType] = useState<string>("");
   const [checkInDate, setCheckInDate] = useState<string>("");
   const [checkOutDate, setCheckOutDate] = useState<string>("");
   const [guests, setGuests] = useState<string>("");
+  const [maxPrice, setMaxPrice] = useState<string>("");
 
   const selectedCountyData = KENYA_COUNTIES.find(c => c.name === selectedCounty);
 
   const handleSearch = () => {
     const params = new URLSearchParams();
     
+    if (keyword) params.append("keyword", keyword);
     const location = selectedSubCounty || selectedCounty;
     if (location) params.append("location", location);
+    if (propertyType) params.append("types", propertyType);
     if (checkInDate) params.append("checkIn", checkInDate);
     if (checkOutDate) params.append("checkOut", checkOutDate);
     if (guests) params.append("guests", guests);
+    if (maxPrice) params.append("maxPrice", maxPrice);
 
     navigate(`/search?${params.toString()}`);
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") handleSearch();
+  };
+
   return (
-    <div className="bg-card rounded-xl shadow-xl p-2 w-full max-w-4xl mx-auto border border-border">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
-        <div className="flex items-center gap-2 px-4 py-3 rounded-lg hover:bg-secondary/50 transition-colors">
-          <MapPin className="h-5 w-5 text-primary" />
-          <div className="flex-1 space-y-2">
-            <label className="text-xs font-medium text-muted-foreground">County</label>
+    <div className="bg-card rounded-xl shadow-xl p-3 w-full max-w-5xl mx-auto border border-border">
+      {/* Row 1: Keyword search */}
+      <div className="flex items-center gap-2 px-4 py-2 mb-2 rounded-lg bg-secondary/30">
+        <Search className="h-5 w-5 text-primary shrink-0" />
+        <Input
+          type="text"
+          placeholder="Search by property name, keyword, or description..."
+          value={keyword}
+          onChange={(e) => setKeyword(e.target.value)}
+          onKeyDown={handleKeyDown}
+          className="border-0 p-0 h-auto focus-visible:ring-0 font-medium bg-transparent text-base"
+        />
+      </div>
+
+      {/* Row 2: Filters */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-2">
+        {/* County & Sub-County */}
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-secondary/50 transition-colors">
+          <MapPin className="h-4 w-4 text-primary shrink-0" />
+          <div className="flex-1 min-w-0">
+            <label className="text-xs font-medium text-muted-foreground">Location</label>
             <Select value={selectedCounty} onValueChange={(value) => {
               setSelectedCounty(value);
               setSelectedSubCounty("");
             }}>
-              <SelectTrigger className="border-0 p-0 h-auto focus:ring-0 font-medium">
-                <SelectValue placeholder="Select county" />
+              <SelectTrigger className="border-0 p-0 h-auto focus:ring-0 font-medium text-sm">
+                <SelectValue placeholder="County" />
               </SelectTrigger>
               <SelectContent className="max-h-[300px]">
                 <SelectGroup>
@@ -53,68 +79,108 @@ const SearchBar = () => {
               </SelectContent>
             </Select>
             {selectedCounty && (
-              <>
-                <label className="text-xs font-medium text-muted-foreground">Sub-County</label>
-                <Select value={selectedSubCounty} onValueChange={setSelectedSubCounty}>
-                  <SelectTrigger className="border-0 p-0 h-auto focus:ring-0 font-medium">
-                    <SelectValue placeholder="Select sub-county" />
-                  </SelectTrigger>
-                  <SelectContent className="max-h-[300px]">
-                    <SelectGroup>
-                      {selectedCountyData?.subCounties.map((subCounty) => (
-                        <SelectItem key={subCounty} value={subCounty}>
-                          {subCounty}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              </>
+              <Select value={selectedSubCounty} onValueChange={setSelectedSubCounty}>
+                <SelectTrigger className="border-0 p-0 h-auto focus:ring-0 font-medium text-sm mt-1">
+                  <SelectValue placeholder="Sub-county" />
+                </SelectTrigger>
+                <SelectContent className="max-h-[300px]">
+                  <SelectGroup>
+                    {selectedCountyData?.subCounties.map((subCounty) => (
+                      <SelectItem key={subCounty} value={subCounty}>
+                        {subCounty}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
             )}
           </div>
         </div>
+
+        {/* Property Type */}
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-secondary/50 transition-colors">
+          <Building className="h-4 w-4 text-primary shrink-0" />
+          <div className="flex-1 min-w-0">
+            <label className="text-xs font-medium text-muted-foreground">Type</label>
+            <Select value={propertyType} onValueChange={setPropertyType}>
+              <SelectTrigger className="border-0 p-0 h-auto focus:ring-0 font-medium text-sm">
+                <SelectValue placeholder="All types" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  {PROPERTY_TYPES.map((type) => (
+                    <SelectItem key={type.value} value={type.value}>
+                      {type.label}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
         
-        <div className="flex items-center gap-2 px-4 py-3 rounded-lg hover:bg-secondary/50 transition-colors cursor-pointer">
-          <Calendar className="h-5 w-5 text-primary" />
-          <div className="flex-1">
+        {/* Check-in */}
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-secondary/50 transition-colors">
+          <Calendar className="h-4 w-4 text-primary shrink-0" />
+          <div className="flex-1 min-w-0">
             <label className="text-xs font-medium text-muted-foreground">Check-in</label>
             <Input 
               type="date" 
               value={checkInDate}
               onChange={(e) => setCheckInDate(e.target.value)}
-              className="border-0 p-0 h-auto focus-visible:ring-0 font-medium"
+              className="border-0 p-0 h-auto focus-visible:ring-0 font-medium text-sm"
             />
           </div>
         </div>
         
-        <div className="flex items-center gap-2 px-4 py-3 rounded-lg hover:bg-secondary/50 transition-colors cursor-pointer">
-          <Calendar className="h-5 w-5 text-primary" />
-          <div className="flex-1">
+        {/* Check-out */}
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-secondary/50 transition-colors">
+          <Calendar className="h-4 w-4 text-primary shrink-0" />
+          <div className="flex-1 min-w-0">
             <label className="text-xs font-medium text-muted-foreground">Check-out</label>
             <Input 
               type="date" 
               value={checkOutDate}
               onChange={(e) => setCheckOutDate(e.target.value)}
               min={checkInDate}
-              className="border-0 p-0 h-auto focus-visible:ring-0 font-medium"
+              className="border-0 p-0 h-auto focus-visible:ring-0 font-medium text-sm"
+            />
+          </div>
+        </div>
+
+        {/* Max Price */}
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-secondary/50 transition-colors">
+          <DollarSign className="h-4 w-4 text-primary shrink-0" />
+          <div className="flex-1 min-w-0">
+            <label className="text-xs font-medium text-muted-foreground">Max Price</label>
+            <Input 
+              type="number" 
+              placeholder="KES"
+              value={maxPrice}
+              onChange={(e) => setMaxPrice(e.target.value)}
+              onKeyDown={handleKeyDown}
+              className="border-0 p-0 h-auto focus-visible:ring-0 font-medium text-sm"
+              min="0"
             />
           </div>
         </div>
         
-        <div className="flex items-center gap-2 px-4 py-3">
-          <Users className="h-5 w-5 text-primary" />
-          <div className="flex-1">
+        {/* Guests + Search Button */}
+        <div className="flex items-center gap-2 px-3 py-2">
+          <Users className="h-4 w-4 text-primary shrink-0" />
+          <div className="flex-1 min-w-0">
             <label className="text-xs font-medium text-muted-foreground">Guests</label>
             <Input 
               type="number" 
-              placeholder="Add guests"
+              placeholder="Add"
               value={guests}
               onChange={(e) => setGuests(e.target.value)}
-              className="border-0 p-0 h-auto focus-visible:ring-0 font-medium"
+              onKeyDown={handleKeyDown}
+              className="border-0 p-0 h-auto focus-visible:ring-0 font-medium text-sm"
               min="1"
             />
           </div>
-          <Button size="icon" variant="accent" className="rounded-lg ml-2" onClick={handleSearch}>
+          <Button size="icon" variant="accent" className="rounded-lg ml-1 shrink-0" onClick={handleSearch}>
             <Search className="h-5 w-5" />
           </Button>
         </div>
