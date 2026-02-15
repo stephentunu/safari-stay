@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -27,6 +27,8 @@ interface Property {
 
 const Index = () => {
   const [properties, setProperties] = useState<Property[]>([]);
+  const [searchResults, setSearchResults] = useState<Property[] | null>(null);
+  const [searchLoading, setSearchLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -53,6 +55,52 @@ const Index = () => {
     }
   };
 
+  const handleHomeSearch = useCallback(async (params: URLSearchParams) => {
+    const keyword = params.get("keyword");
+    const location = params.get("location");
+    const types = params.get("types");
+    const maxPrice = params.get("maxPrice");
+    const guests = params.get("guests");
+
+    if (!keyword && !location && !types && !maxPrice && !guests) {
+      setSearchResults(null);
+      return;
+    }
+
+    try {
+      setSearchLoading(true);
+      let query = supabase
+        .from("properties")
+        .select("*")
+        .eq("is_approved", true)
+        .eq("is_active", true);
+
+      if (location) query = query.ilike("location", `%${location}%`);
+      if (keyword) {
+        query = query.or(`title.ilike.%${keyword}%,description.ilike.%${keyword}%`);
+      }
+      if (types) {
+        const typeList = types.split(",");
+        if (typeList.length === 1) {
+          query = query.eq("property_type", typeList[0] as any);
+        } else {
+          query = query.in("property_type", typeList as any[]);
+        }
+      }
+      if (maxPrice) query = query.lte("price_per_night", parseInt(maxPrice));
+      if (guests) query = query.gte("max_guests", parseInt(guests));
+
+      const { data, error } = await query.limit(12);
+      if (error) throw error;
+      setSearchResults(data || []);
+    } catch (error: any) {
+      console.error("Error searching:", error);
+      toast({ title: "Error", description: "Failed to search properties", variant: "destructive" });
+    } finally {
+      setSearchLoading(false);
+    }
+  }, [toast]);
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -71,9 +119,46 @@ const Index = () => {
           <p className="text-xl md:text-2xl mb-8 text-white/90 max-w-2xl mx-auto">
             Book verified accommodations with M-Pesa payments. Fast, secure, and built for Africa.
           </p>
-          <SearchBar />
+          <SearchBar onSearch={handleHomeSearch} />
         </div>
       </section>
+
+      {/* Inline Search Results */}
+      {searchResults !== null && (
+        <section className="py-10 bg-gradient-to-b from-primary/5 to-background">
+          <div className="container mx-auto px-4">
+            <h2 className="text-2xl font-bold mb-6">
+              {searchLoading ? "Searching..." : `${searchResults.length} ${searchResults.length === 1 ? "property" : "properties"} found`}
+            </h2>
+            {searchLoading ? (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">Searching properties...</p>
+              </div>
+            ) : searchResults.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-lg font-medium mb-2">No properties match your search</p>
+                <p className="text-muted-foreground">Try adjusting your search criteria</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                {searchResults.map((property) => (
+                  <PropertyCard
+                    key={property.id}
+                    id={property.id}
+                    image={property.images[0] || property1}
+                    images={property.images}
+                    title={property.title}
+                    location={property.location}
+                    price={property.price_per_night}
+                    rating={4.5}
+                    reviews={0}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* Features */}
       <section className="py-12 bg-secondary/30">
