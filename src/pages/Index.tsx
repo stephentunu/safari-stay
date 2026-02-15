@@ -123,43 +123,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Inline Search Results */}
-      {searchResults !== null && (
-        <section className="py-10 bg-gradient-to-b from-primary/5 to-background">
-          <div className="container mx-auto px-4">
-            <h2 className="text-2xl font-bold mb-6">
-              {searchLoading ? "Searching..." : `${searchResults.length} ${searchResults.length === 1 ? "property" : "properties"} found`}
-            </h2>
-            {searchLoading ? (
-              <div className="text-center py-8">
-                <p className="text-muted-foreground">Searching properties...</p>
-              </div>
-            ) : searchResults.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-lg font-medium mb-2">No properties match your search</p>
-                <p className="text-muted-foreground">Try adjusting your search criteria</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                {searchResults.map((property) => (
-                  <PropertyCard
-                    key={property.id}
-                    id={property.id}
-                    image={property.images[0] || property1}
-                    images={property.images}
-                    title={property.title}
-                    location={property.location}
-                    price={property.price_per_night}
-                    rating={4.5}
-                    reviews={0}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-        </section>
-      )}
-
       {/* Features */}
       <section className="py-12 bg-secondary/30">
         <div className="container mx-auto px-4">
@@ -195,6 +158,43 @@ const Index = () => {
           </div>
         </div>
       </section>
+
+      {/* Inline Search Results - immediately above filter/featured section */}
+      {searchResults !== null && (
+        <section className="py-10 bg-gradient-to-b from-primary/5 to-background">
+          <div className="container mx-auto px-4">
+            <h2 className="text-2xl font-bold mb-6">
+              {searchLoading ? "Searching..." : `${searchResults.length} ${searchResults.length === 1 ? "property" : "properties"} found`}
+            </h2>
+            {searchLoading ? (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">Searching properties...</p>
+              </div>
+            ) : searchResults.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-lg font-medium mb-2">No properties match your search</p>
+                <p className="text-muted-foreground">Try adjusting your search criteria</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                {searchResults.map((property) => (
+                  <PropertyCard
+                    key={property.id}
+                    id={property.id}
+                    image={property.images[0] || property1}
+                    images={property.images}
+                    title={property.title}
+                    location={property.location}
+                    price={property.price_per_night}
+                    rating={4.5}
+                    reviews={0}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* Main Content */}
       <section className="py-12">
