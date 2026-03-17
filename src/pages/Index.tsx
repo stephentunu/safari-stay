@@ -109,17 +109,23 @@ const Index = () => {
       <Marquee />
       {/* Hero Section */}
       <section 
-        className="relative h-[600px] flex items-center justify-center bg-cover bg-center"
+        className="relative h-[600px] flex flex-col bg-cover bg-center"
         style={{ backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url(${heroBg})` }}
       >
-        <div className="container mx-auto px-4 text-center">
-          <h1 className="text-5xl md:text-6xl font-bold mb-6 text-white drop-shadow-lg">
-            Discover Kenya's Finest Stays
-          </h1>
-          <p className="text-xl md:text-2xl mb-8 text-white/90 max-w-2xl mx-auto">
-            Book verified accommodations with M-Pesa payments. Fast, secure, and built for Africa.
-          </p>
+        {/* Search bar pinned to top */}
+        <div className="container mx-auto px-4 pt-6">
           <SearchBar onSearch={handleHomeSearch} />
+        </div>
+        {/* Hero text centered in remaining space */}
+        <div className="flex-1 flex items-center justify-center">
+          <div className="container mx-auto px-4 text-center">
+            <h1 className="text-5xl md:text-6xl font-bold mb-6 text-white drop-shadow-lg">
+              Discover Kenya's Finest Stays
+            </h1>
+            <p className="text-xl md:text-2xl text-white/90 max-w-2xl mx-auto">
+              Book verified accommodations with M-Pesa payments. Fast, secure, and built for Africa.
+            </p>
+          </div>
         </div>
       </section>
 
