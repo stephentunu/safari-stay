@@ -17,6 +17,9 @@ import AdminDashboard from "./pages/AdminDashboard";
 import Terms from "./pages/Terms";
 import RequestProperty from "./pages/RequestProperty";
 import HostProfile from "./pages/HostProfile";
+import Blog from "./pages/Blog";
+import Events from "./pages/Events";
+import Destinations from "./pages/Destinations";
 import NotFound from "./pages/NotFound";
 import Chatbot from "./components/Chatbot";
 import NotificationPrompt from "./components/NotificationPrompt";
@@ -45,6 +48,9 @@ const App = () => (
             <Route path="/terms" element={<Terms />} />
             <Route path="/request-property" element={<RequestProperty />} />
             <Route path="/host/:hostId" element={<HostProfile />} />
+            <Route path="/blog" element={<Blog />} />
+            <Route path="/events" element={<Events />} />
+            <Route path="/destinations" element={<Destinations />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
