@@ -82,6 +82,30 @@ const Navbar = () => {
               {t("nav.faq")}
             </NavLink>
             <NavLink 
+              to="/blog" 
+              className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors flex items-center gap-1"
+              activeClassName="text-primary"
+            >
+              <Newspaper className="h-3.5 w-3.5" />
+              Blog
+            </NavLink>
+            <NavLink 
+              to="/events" 
+              className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors flex items-center gap-1"
+              activeClassName="text-primary"
+            >
+              <CalendarDays className="h-3.5 w-3.5" />
+              Events
+            </NavLink>
+            <NavLink 
+              to="/destinations" 
+              className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors flex items-center gap-1"
+              activeClassName="text-primary"
+            >
+              <Compass className="h-3.5 w-3.5" />
+              Destinations
+            </NavLink>
+            <NavLink 
               to="/add-property" 
               className="text-sm font-medium text-foreground hover:text-primary transition-colors"
             >
