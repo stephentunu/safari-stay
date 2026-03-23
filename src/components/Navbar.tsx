@@ -186,6 +186,30 @@ const Navbar = () => {
                   {t("nav.faq")}
                 </NavLink>
                 <NavLink 
+                  to="/blog" 
+                  className="text-base font-medium text-muted-foreground hover:text-primary transition-colors py-2 flex items-center gap-2"
+                  activeClassName="text-primary"
+                >
+                  <Newspaper className="h-4 w-4" />
+                  Blog
+                </NavLink>
+                <NavLink 
+                  to="/events" 
+                  className="text-base font-medium text-muted-foreground hover:text-primary transition-colors py-2 flex items-center gap-2"
+                  activeClassName="text-primary"
+                >
+                  <CalendarDays className="h-4 w-4" />
+                  Events
+                </NavLink>
+                <NavLink 
+                  to="/destinations" 
+                  className="text-base font-medium text-muted-foreground hover:text-primary transition-colors py-2 flex items-center gap-2"
+                  activeClassName="text-primary"
+                >
+                  <Compass className="h-4 w-4" />
+                  Destinations
+                </NavLink>
+                <NavLink 
                   to="/add-property" 
                   className="text-base font-medium text-foreground hover:text-primary transition-colors py-2"
                 >
