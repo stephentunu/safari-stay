@@ -136,14 +136,14 @@ const Referrals = () => {
           </Card>
           <Card>
             <CardContent className="pt-6 text-center">
-              <Trophy className="h-8 w-8 mx-auto mb-2 text-amber-500" />
+              <Trophy className="h-8 w-8 mx-auto mb-2 text-primary" />
               <p className="text-3xl font-bold">{milestonesReached}</p>
               <p className="text-sm text-muted-foreground">Milestones Reached</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="pt-6 text-center">
-              <Gift className="h-8 w-8 mx-auto mb-2 text-green-500" />
+              <Gift className="h-8 w-8 mx-auto mb-2 text-accent-foreground" />
               <p className="text-3xl font-bold">KES {totalCredits.toLocaleString()}</p>
               <p className="text-sm text-muted-foreground">Total Credits Earned</p>
             </CardContent>
