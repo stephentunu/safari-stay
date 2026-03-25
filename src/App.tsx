@@ -24,6 +24,7 @@ import NotFound from "./pages/NotFound";
 import Chatbot from "./components/Chatbot";
 import NotificationPrompt from "./components/NotificationPrompt";
 import OnlineUsersTracker from "./components/OnlineUsersTracker";
+import SessionGuard from "./components/SessionGuard";
 
 const queryClient = new QueryClient();
 
@@ -54,6 +55,7 @@ const App = () => (
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <SessionGuard />
           <Chatbot />
           <NotificationPrompt />
           <OnlineUsersTracker />
