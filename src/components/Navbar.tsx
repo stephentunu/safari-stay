@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Menu, User, LogOut, Heart, Shield, Newspaper, CalendarDays, Compass } from "lucide-react";
+import { Menu, User, LogOut, Heart, Shield, Newspaper, CalendarDays, Compass, Gift } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { NavLink } from "@/components/NavLink";
