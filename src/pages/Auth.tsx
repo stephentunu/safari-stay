@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,12 +13,14 @@ import Footer from "@/components/Footer";
 
 const Auth = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [userType, setUserType] = useState<"traveler" | "host">("traveler");
+  const [referralCode, setReferralCode] = useState(searchParams.get("ref") || "");
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -57,6 +59,27 @@ const Auth = () => {
         
         if (roleError) {
           console.error("Error adding host role:", roleError);
+        }
+      }
+
+      // Handle referral code
+      if (data.user && referralCode.trim()) {
+        try {
+          const { data: codeData } = await supabase
+            .from("referral_codes")
+            .select("id, user_id")
+            .eq("code", referralCode.trim())
+            .maybeSingle();
+
+          if (codeData && codeData.user_id !== data.user.id) {
+            await supabase.from("referrals").insert({
+              referrer_id: codeData.user_id,
+              referred_user_id: data.user.id,
+              referral_code_id: codeData.id,
+            });
+          }
+        } catch (refError) {
+          console.error("Referral tracking error:", refError);
         }
       }
 
@@ -192,6 +215,16 @@ const Auth = () => {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     minLength={6}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="referral-code">Referral Code (optional)</Label>
+                  <Input
+                    id="referral-code"
+                    type="text"
+                    placeholder="e.g. MCDONE-A1B2C3D4"
+                    value={referralCode}
+                    onChange={(e) => setReferralCode(e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">

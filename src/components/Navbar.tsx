@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Menu, User, LogOut, Heart, Shield, Newspaper, CalendarDays, Compass } from "lucide-react";
+import { Menu, User, LogOut, Heart, Shield, Newspaper, CalendarDays, Compass, Gift } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { NavLink } from "@/components/NavLink";
@@ -105,7 +105,17 @@ const Navbar = () => {
               <Compass className="h-3.5 w-3.5" />
               Destinations
             </NavLink>
-            <NavLink 
+            {user && (
+              <NavLink 
+                to="/referrals" 
+                className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors flex items-center gap-1"
+                activeClassName="text-primary"
+              >
+                <Gift className="h-3.5 w-3.5" />
+                Referrals
+              </NavLink>
+            )}
+            <NavLink
               to="/add-property" 
               className="text-sm font-medium text-foreground hover:text-primary transition-colors"
             >
@@ -209,7 +219,17 @@ const Navbar = () => {
                   <Compass className="h-4 w-4" />
                   Destinations
                 </NavLink>
-                <NavLink 
+                {user && (
+                  <NavLink 
+                    to="/referrals" 
+                    className="text-base font-medium text-muted-foreground hover:text-primary transition-colors py-2 flex items-center gap-2"
+                    activeClassName="text-primary"
+                  >
+                    <Gift className="h-4 w-4" />
+                    Referrals
+                  </NavLink>
+                )}
+                <NavLink
                   to="/add-property" 
                   className="text-base font-medium text-foreground hover:text-primary transition-colors py-2"
                 >

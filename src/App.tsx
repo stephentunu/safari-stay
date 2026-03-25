@@ -20,6 +20,7 @@ import HostProfile from "./pages/HostProfile";
 import Blog from "./pages/Blog";
 import Events from "./pages/Events";
 import Destinations from "./pages/Destinations";
+import Referrals from "./pages/Referrals";
 import NotFound from "./pages/NotFound";
 import Chatbot from "./components/Chatbot";
 import NotificationPrompt from "./components/NotificationPrompt";
@@ -52,6 +53,7 @@ const App = () => (
             <Route path="/blog" element={<Blog />} />
             <Route path="/events" element={<Events />} />
             <Route path="/destinations" element={<Destinations />} />
+            <Route path="/referrals" element={<Referrals />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
