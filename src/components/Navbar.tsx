@@ -105,7 +105,17 @@ const Navbar = () => {
               <Compass className="h-3.5 w-3.5" />
               Destinations
             </NavLink>
-            <NavLink 
+            {user && (
+              <NavLink 
+                to="/referrals" 
+                className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors flex items-center gap-1"
+                activeClassName="text-primary"
+              >
+                <Gift className="h-3.5 w-3.5" />
+                Referrals
+              </NavLink>
+            )}
+            <NavLink
               to="/add-property" 
               className="text-sm font-medium text-foreground hover:text-primary transition-colors"
             >
