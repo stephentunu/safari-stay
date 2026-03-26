@@ -8,9 +8,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Loader2, CheckCircle, XCircle, Home, Users, CreditCard, TrendingUp, Trash2, Wifi } from "lucide-react";
+import { Loader2, CheckCircle, XCircle, Home, Users, CreditCard, TrendingUp, Trash2, Wifi, Shield } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import FraudFlagsTab from "@/components/admin/FraudFlagsTab";
 
 const AdminDashboard = () => {
   const { user, loading: authLoading } = useAuth();
