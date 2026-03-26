@@ -100,6 +100,20 @@ const PropertyDetails = () => {
     }
   }, [id]);
 
+  // Fetch loyalty discount for current user
+  useEffect(() => {
+    const fetchLoyaltyDiscount = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data, error } = await supabase.rpc("get_loyalty_discount", { _user_id: user.id });
+        if (!error && data !== null) {
+          setLoyaltyDiscount(Number(data));
+        }
+      }
+    };
+    fetchLoyaltyDiscount();
+  }, []);
+
   useEffect(() => {
     if (checkInDate && checkOutDate && id) {
       checkAvailability();
