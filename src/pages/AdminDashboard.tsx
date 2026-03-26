@@ -528,6 +528,11 @@ const AdminDashboard = () => {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {/* Fraud Flags */}
+          <TabsContent value="fraud">
+            <FraudFlagsTab />
+          </TabsContent>
         </Tabs>
       </div>
       
