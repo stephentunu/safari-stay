@@ -410,6 +410,20 @@ const PropertyDetails = () => {
     return subtotal;
   };
 
+  const addChild = () => {
+    setChildren([...children, { age: 0 }]);
+  };
+
+  const removeChild = (index: number) => {
+    setChildren(children.filter((_, i) => i !== index));
+  };
+
+  const updateChildAge = (index: number, age: number) => {
+    const updated = [...children];
+    updated[index] = { age };
+    setChildren(updated);
+  };
+
   const getSubtotalBeforeDiscount = () => {
     if (!checkInDate || !checkOutDate || !property) return 0;
     const nights = differenceInDays(checkOutDate, checkInDate);
