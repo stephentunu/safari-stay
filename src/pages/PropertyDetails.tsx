@@ -735,6 +735,14 @@ const PropertyDetails = () => {
                 </CardTitle>
                 <CurrencyConverter priceKES={pricePerNight} className="mt-2" />
                 <CardDescription>Book your stay</CardDescription>
+                {loyaltyDiscount > 0 && (
+                  <div className="flex items-center gap-2 mt-2 p-2 rounded-md bg-primary/10 border border-primary/20">
+                    <Gift className="h-4 w-4 text-primary" />
+                    <span className="text-sm font-medium text-primary">
+                      {loyaltyDiscount}% loyalty discount applied!
+                    </span>
+                  </div>
+                )}
               </CardHeader>
               <CardContent className="space-y-4">
                 {/* Room/Board Selection for Hotels */}
