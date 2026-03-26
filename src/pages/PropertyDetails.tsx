@@ -90,7 +90,7 @@ const PropertyDetails = () => {
   const [selectedBoardType, setSelectedBoardType] = useState<string>("");
   const [selectedRoomCategory, setSelectedRoomCategory] = useState<string>("");
   const [selectedBedType, setSelectedBedType] = useState<string>("");
-
+  const [loyaltyDiscount, setLoyaltyDiscount] = useState<number>(0);
   const isHotelType = property ? ["hotel", "guesthouse", "resort", "motel"].includes(property.property_type) : false;
   const childFreeAge = property?.child_free_age || 10;
 
