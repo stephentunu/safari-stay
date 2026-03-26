@@ -242,6 +242,8 @@ const PropertyDetails = () => {
           check_out_date: format(checkOutDate, "yyyy-MM-dd"),
           guests: totalGuests,
           total_price: totalPrice,
+          original_price: loyaltyDiscount > 0 ? getSubtotalBeforeDiscount() : null,
+          loyalty_discount_percent: loyaltyDiscount,
           special_requests: specialRequests,
           status: "pending",
           board_type: isHotelType ? selectedBoardType : null,
@@ -988,6 +990,22 @@ const PropertyDetails = () => {
                       </div>
                     )}
                     <Separator />
+                    {loyaltyDiscount > 0 && (
+                      <>
+                        <div className="flex justify-between text-sm">
+                          <span>Subtotal</span>
+                          <span>KES {getSubtotalBeforeDiscount().toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between text-sm text-primary font-medium">
+                          <span className="flex items-center gap-1">
+                            <Gift className="h-3 w-3" />
+                            Loyalty Discount ({loyaltyDiscount}%)
+                          </span>
+                          <span>- KES {(getSubtotalBeforeDiscount() - calculateTotalPrice()).toLocaleString()}</span>
+                        </div>
+                        <Separator />
+                      </>
+                    )}
                     <div className="flex justify-between font-semibold text-lg">
                       <span>Total</span>
                       <span>KES {calculateTotalPrice().toLocaleString()}</span>
