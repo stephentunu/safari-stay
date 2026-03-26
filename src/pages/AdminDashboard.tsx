@@ -276,6 +276,10 @@ const AdminDashboard = () => {
               <Wifi className="w-3 h-3 text-green-500" />
               Online ({stats.onlineCount})
             </TabsTrigger>
+            <TabsTrigger value="fraud" className="flex items-center gap-1">
+              <Shield className="w-3 h-3 text-destructive" />
+              Fraud Flags
+            </TabsTrigger>
           </TabsList>
 
           {/* Pending Properties */}
