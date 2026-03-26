@@ -26,6 +26,8 @@ export type Database = {
           guests: number
           host_id: string
           id: string
+          loyalty_discount_percent: number | null
+          original_price: number | null
           property_id: string
           room_category: string | null
           special_requests: string | null
@@ -45,6 +47,8 @@ export type Database = {
           guests: number
           host_id: string
           id?: string
+          loyalty_discount_percent?: number | null
+          original_price?: number | null
           property_id: string
           room_category?: string | null
           special_requests?: string | null
@@ -64,6 +68,8 @@ export type Database = {
           guests?: number
           host_id?: string
           id?: string
+          loyalty_discount_percent?: number | null
+          original_price?: number | null
           property_id?: string
           room_category?: string | null
           special_requests?: string | null
@@ -653,6 +659,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_loyalty_discount: { Args: { _user_id: string }; Returns: number }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

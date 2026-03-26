@@ -21,7 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MapPin, Users, BedDouble, Bath, Star, Wifi, Coffee, CarFront, Shield, Calendar as CalendarIcon, Utensils, Briefcase, CreditCard, Smartphone, Navigation, Landmark, Car, Bed, UtensilsCrossed } from "lucide-react";
+import { MapPin, Users, BedDouble, Bath, Star, Wifi, Coffee, CarFront, Shield, Calendar as CalendarIcon, Utensils, Briefcase, CreditCard, Smartphone, Navigation, Landmark, Car, Bed, UtensilsCrossed, Gift } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 import { BOARD_TYPES, ROOM_CATEGORIES, BED_TYPES } from "@/data/propertyOptions";
 
@@ -90,7 +90,7 @@ const PropertyDetails = () => {
   const [selectedBoardType, setSelectedBoardType] = useState<string>("");
   const [selectedRoomCategory, setSelectedRoomCategory] = useState<string>("");
   const [selectedBedType, setSelectedBedType] = useState<string>("");
-
+  const [loyaltyDiscount, setLoyaltyDiscount] = useState<number>(0);
   const isHotelType = property ? ["hotel", "guesthouse", "resort", "motel"].includes(property.property_type) : false;
   const childFreeAge = property?.child_free_age || 10;
 
@@ -99,6 +99,20 @@ const PropertyDetails = () => {
       fetchProperty();
     }
   }, [id]);
+
+  // Fetch loyalty discount for current user
+  useEffect(() => {
+    const fetchLoyaltyDiscount = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data, error } = await supabase.rpc("get_loyalty_discount", { _user_id: user.id });
+        if (!error && data !== null) {
+          setLoyaltyDiscount(Number(data));
+        }
+      }
+    };
+    fetchLoyaltyDiscount();
+  }, []);
 
   useEffect(() => {
     if (checkInDate && checkOutDate && id) {
@@ -228,6 +242,8 @@ const PropertyDetails = () => {
           check_out_date: format(checkOutDate, "yyyy-MM-dd"),
           guests: totalGuests,
           total_price: totalPrice,
+          original_price: loyaltyDiscount > 0 ? getSubtotalBeforeDiscount() : null,
+          loyalty_discount_percent: loyaltyDiscount,
           special_requests: specialRequests,
           status: "pending",
           board_type: isHotelType ? selectedBoardType : null,
@@ -386,7 +402,14 @@ const PropertyDetails = () => {
     const payingChildren = children.filter(c => c.age >= childFreeAge).length;
     const payingGuests = adults + payingChildren;
     
-    return nights * pricePerNight * payingGuests;
+    const subtotal = nights * pricePerNight * payingGuests;
+    
+    // Apply loyalty discount
+    if (loyaltyDiscount > 0) {
+      return Math.round(subtotal * (1 - loyaltyDiscount / 100));
+    }
+    
+    return subtotal;
   };
 
   const addChild = () => {
@@ -401,6 +424,21 @@ const PropertyDetails = () => {
     const updated = [...children];
     updated[index] = { age };
     setChildren(updated);
+  };
+
+  const getSubtotalBeforeDiscount = () => {
+    if (!checkInDate || !checkOutDate || !property) return 0;
+    const nights = differenceInDays(checkOutDate, checkInDate);
+    let pricePerNight = getSelectedRoomPrice();
+    if (isHotelType && selectedBoardType && property.custom_board_types) {
+      const customBoard = property.custom_board_types.find(c => c.id === selectedBoardType);
+      if (customBoard && customBoard.price_adjustment) {
+        pricePerNight += customBoard.price_adjustment;
+      }
+    }
+    const payingChildren = children.filter(c => c.age >= childFreeAge).length;
+    const payingGuests = adults + payingChildren;
+    return nights * pricePerNight * payingGuests;
   };
 
   const getFreeChildrenCount = () => children.filter(c => c.age < childFreeAge).length;
@@ -697,6 +735,14 @@ const PropertyDetails = () => {
                 </CardTitle>
                 <CurrencyConverter priceKES={pricePerNight} className="mt-2" />
                 <CardDescription>Book your stay</CardDescription>
+                {loyaltyDiscount > 0 && (
+                  <div className="flex items-center gap-2 mt-2 p-2 rounded-md bg-primary/10 border border-primary/20">
+                    <Gift className="h-4 w-4 text-primary" />
+                    <span className="text-sm font-medium text-primary">
+                      {loyaltyDiscount}% loyalty discount applied!
+                    </span>
+                  </div>
+                )}
               </CardHeader>
               <CardContent className="space-y-4">
                 {/* Room/Board Selection for Hotels */}
@@ -952,6 +998,22 @@ const PropertyDetails = () => {
                       </div>
                     )}
                     <Separator />
+                    {loyaltyDiscount > 0 && (
+                      <>
+                        <div className="flex justify-between text-sm">
+                          <span>Subtotal</span>
+                          <span>KES {getSubtotalBeforeDiscount().toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between text-sm text-primary font-medium">
+                          <span className="flex items-center gap-1">
+                            <Gift className="h-3 w-3" />
+                            Loyalty Discount ({loyaltyDiscount}%)
+                          </span>
+                          <span>- KES {(getSubtotalBeforeDiscount() - calculateTotalPrice()).toLocaleString()}</span>
+                        </div>
+                        <Separator />
+                      </>
+                    )}
                     <div className="flex justify-between font-semibold text-lg">
                       <span>Total</span>
                       <span>KES {calculateTotalPrice().toLocaleString()}</span>
