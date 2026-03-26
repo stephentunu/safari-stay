@@ -400,21 +400,29 @@ const PropertyDetails = () => {
     const payingChildren = children.filter(c => c.age >= childFreeAge).length;
     const payingGuests = adults + payingChildren;
     
+    const subtotal = nights * pricePerNight * payingGuests;
+    
+    // Apply loyalty discount
+    if (loyaltyDiscount > 0) {
+      return Math.round(subtotal * (1 - loyaltyDiscount / 100));
+    }
+    
+    return subtotal;
+  };
+
+  const getSubtotalBeforeDiscount = () => {
+    if (!checkInDate || !checkOutDate || !property) return 0;
+    const nights = differenceInDays(checkOutDate, checkInDate);
+    let pricePerNight = getSelectedRoomPrice();
+    if (isHotelType && selectedBoardType && property.custom_board_types) {
+      const customBoard = property.custom_board_types.find(c => c.id === selectedBoardType);
+      if (customBoard && customBoard.price_adjustment) {
+        pricePerNight += customBoard.price_adjustment;
+      }
+    }
+    const payingChildren = children.filter(c => c.age >= childFreeAge).length;
+    const payingGuests = adults + payingChildren;
     return nights * pricePerNight * payingGuests;
-  };
-
-  const addChild = () => {
-    setChildren([...children, { age: 0 }]);
-  };
-
-  const removeChild = (index: number) => {
-    setChildren(children.filter((_, i) => i !== index));
-  };
-
-  const updateChildAge = (index: number, age: number) => {
-    const updated = [...children];
-    updated[index] = { age };
-    setChildren(updated);
   };
 
   const getFreeChildrenCount = () => children.filter(c => c.age < childFreeAge).length;
