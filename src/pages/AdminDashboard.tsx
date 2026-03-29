@@ -538,6 +538,11 @@ const AdminDashboard = () => {
           <TabsContent value="fraud">
             <FraudFlagsTab />
           </TabsContent>
+
+          {/* Experiences */}
+          <TabsContent value="experiences">
+            <ExperiencesTab />
+          </TabsContent>
         </Tabs>
       </div>
       
