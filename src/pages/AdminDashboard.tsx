@@ -281,6 +281,10 @@ const AdminDashboard = () => {
               <Shield className="w-3 h-3 text-destructive" />
               Fraud Flags
             </TabsTrigger>
+            <TabsTrigger value="experiences" className="flex items-center gap-1">
+              <Compass className="w-3 h-3" />
+              Experiences
+            </TabsTrigger>
           </TabsList>
 
           {/* Pending Properties */}
