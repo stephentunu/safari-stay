@@ -102,6 +102,57 @@ export type Database = {
           },
         ]
       }
+      experiences: {
+        Row: {
+          category: string
+          created_at: string
+          created_by: string | null
+          description: string
+          duration: string
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          location: string
+          price: string
+          rating: number | null
+          reviews: number | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          description: string
+          duration: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          location: string
+          price: string
+          rating?: number | null
+          reviews?: number | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          duration?: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          location?: string
+          price?: string
+          rating?: number | null
+          reviews?: number | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       fraud_flags: {
         Row: {
           created_at: string

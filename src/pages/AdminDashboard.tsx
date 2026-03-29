@@ -8,10 +8,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Loader2, CheckCircle, XCircle, Home, Users, CreditCard, TrendingUp, Trash2, Wifi, Shield } from "lucide-react";
+import { Loader2, CheckCircle, XCircle, Home, Users, CreditCard, TrendingUp, Trash2, Wifi, Shield, Compass } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import FraudFlagsTab from "@/components/admin/FraudFlagsTab";
+import ExperiencesTab from "@/components/admin/ExperiencesTab";
 
 const AdminDashboard = () => {
   const { user, loading: authLoading } = useAuth();
@@ -280,6 +281,10 @@ const AdminDashboard = () => {
               <Shield className="w-3 h-3 text-destructive" />
               Fraud Flags
             </TabsTrigger>
+            <TabsTrigger value="experiences" className="flex items-center gap-1">
+              <Compass className="w-3 h-3" />
+              Experiences
+            </TabsTrigger>
           </TabsList>
 
           {/* Pending Properties */}
@@ -532,6 +537,11 @@ const AdminDashboard = () => {
           {/* Fraud Flags */}
           <TabsContent value="fraud">
             <FraudFlagsTab />
+          </TabsContent>
+
+          {/* Experiences */}
+          <TabsContent value="experiences">
+            <ExperiencesTab />
           </TabsContent>
         </Tabs>
       </div>
