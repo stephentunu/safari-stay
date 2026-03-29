@@ -512,6 +512,7 @@ const PropertyDetails = () => {
             )}
           </div>
           <div className="flex items-center gap-2">
+            <WhatsAppButton propertyTitle={property.title} size="sm" variant="outline" />
             <ShareProperty 
               propertyTitle={property.title} 
               propertyUrl={`/property/${property.id}`} 
