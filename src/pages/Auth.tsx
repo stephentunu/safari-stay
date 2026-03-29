@@ -37,9 +37,14 @@ const Auth = () => {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!checkRateLimit("signup", 5, 60000)) {
+      toast({ title: "Too many attempts", description: "Please wait a minute before trying again.", variant: "destructive" });
+      return;
+    }
     setLoading(true);
 
     try {
+      const sanitizedName = sanitizeString(fullName);
       const redirectUrl = `${window.location.origin}/`;
       
       const { data, error } = await supabase.auth.signUp({
@@ -48,7 +53,7 @@ const Auth = () => {
         options: {
           emailRedirectTo: redirectUrl,
           data: {
-            full_name: fullName,
+            full_name: sanitizedName,
           },
         },
       });
