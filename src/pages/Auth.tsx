@@ -1,13 +1,14 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { sanitizeString, checkRateLimit } from "@/lib/sanitize";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, ArrowLeft } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import Footer from "@/components/Footer";
 
@@ -21,6 +22,8 @@ const Auth = () => {
   const [fullName, setFullName] = useState("");
   const [userType, setUserType] = useState<"traveler" | "host">("traveler");
   const [referralCode, setReferralCode] = useState(searchParams.get("ref") || "");
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -34,9 +37,14 @@ const Auth = () => {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!checkRateLimit("signup", 5, 60000)) {
+      toast({ title: "Too many attempts", description: "Please wait a minute before trying again.", variant: "destructive" });
+      return;
+    }
     setLoading(true);
 
     try {
+      const sanitizedName = sanitizeString(fullName);
       const redirectUrl = `${window.location.origin}/`;
       
       const { data, error } = await supabase.auth.signUp({
@@ -45,7 +53,7 @@ const Auth = () => {
         options: {
           emailRedirectTo: redirectUrl,
           data: {
-            full_name: fullName,
+            full_name: sanitizedName,
           },
         },
       });
@@ -100,8 +108,33 @@ const Auth = () => {
     }
   };
 
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!checkRateLimit("forgot-password", 3, 60000)) {
+      toast({ title: "Too many attempts", description: "Please wait before requesting another reset.", variant: "destructive" });
+      return;
+    }
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) throw error;
+      toast({ title: "Check your email", description: "We've sent you a password reset link." });
+      setShowForgotPassword(false);
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!checkRateLimit("signin", 5, 60000)) {
+      toast({ title: "Too many attempts", description: "Please wait a minute before trying again.", variant: "destructive" });
+      return;
+    }
     setLoading(true);
 
     try {
@@ -179,6 +212,13 @@ const Auth = () => {
                     "Sign In"
                   )}
                 </Button>
+                <button
+                  type="button"
+                  onClick={() => setShowForgotPassword(true)}
+                  className="w-full text-sm text-primary hover:underline mt-2"
+                >
+                  Forgot your password?
+                </button>
               </form>
             </TabsContent>
             
@@ -258,8 +298,35 @@ const Auth = () => {
             </TabsContent>
           </Tabs>
         </CardContent>
-      </Card>
-      </div>
+       </Card>
+       </div>
+
+      {/* Forgot Password Modal */}
+      {showForgotPassword && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <Card className="w-full max-w-md">
+            <CardHeader>
+              <button onClick={() => setShowForgotPassword(false)} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-2">
+                <ArrowLeft className="h-4 w-4" /> Back to login
+              </button>
+              <CardTitle>Reset Password</CardTitle>
+              <CardDescription>Enter your email and we'll send you a reset link</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleForgotPassword} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="reset-email">Email</Label>
+                  <Input id="reset-email" type="email" placeholder="you@example.com" value={resetEmail} onChange={(e) => setResetEmail(e.target.value)} required />
+                </div>
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Sending...</> : "Send Reset Link"}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       <Footer />
     </div>
   );

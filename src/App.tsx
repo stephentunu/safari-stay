@@ -21,6 +21,8 @@ import Blog from "./pages/Blog";
 import Events from "./pages/Events";
 import Destinations from "./pages/Destinations";
 import Referrals from "./pages/Referrals";
+import ResetPassword from "./pages/ResetPassword";
+import MortgageCalculator from "./pages/MortgageCalculator";
 import NotFound from "./pages/NotFound";
 import Chatbot from "./components/Chatbot";
 import NotificationPrompt from "./components/NotificationPrompt";
@@ -54,6 +56,8 @@ const App = () => (
             <Route path="/events" element={<Events />} />
             <Route path="/destinations" element={<Destinations />} />
             <Route path="/referrals" element={<Referrals />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/mortgage-calculator" element={<MortgageCalculator />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
