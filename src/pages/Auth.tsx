@@ -110,6 +110,10 @@ const Auth = () => {
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!checkRateLimit("forgot-password", 3, 60000)) {
+      toast({ title: "Too many attempts", description: "Please wait before requesting another reset.", variant: "destructive" });
+      return;
+    }
     setLoading(true);
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
