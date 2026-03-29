@@ -131,6 +131,10 @@ const Auth = () => {
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!checkRateLimit("signin", 5, 60000)) {
+      toast({ title: "Too many attempts", description: "Please wait a minute before trying again.", variant: "destructive" });
+      return;
+    }
     setLoading(true);
 
     try {
