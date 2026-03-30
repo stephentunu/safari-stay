@@ -78,9 +78,11 @@ const SearchResults = () => {
 
       if (checkIn && checkOut && data) {
         const availableProperties = await filterAvailableProperties(data, checkIn, checkOut);
-        setProperties(availableProperties);
+        const withReviews = await fetchReviewData(availableProperties);
+        setProperties(withReviews);
       } else {
-        setProperties(data || []);
+        const withReviews = await fetchReviewData(data || []);
+        setProperties(withReviews);
       }
     } catch (error: any) {
       console.error("Error searching properties:", error);
