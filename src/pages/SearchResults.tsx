@@ -19,6 +19,8 @@ interface Property {
   max_guests: number;
   amenities: string[];
   created_at: string;
+  avg_rating?: number;
+  review_count?: number;
 }
 
 const SearchResults = () => {
