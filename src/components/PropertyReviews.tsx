@@ -134,6 +134,20 @@ const PropertyReviews = ({ propertyId }: PropertyReviewsProps) => {
     <div className="space-y-6">
       <h2 className="text-2xl font-bold">Guest Reviews</h2>
 
+      {eligibleBookings.length > 0 && (
+        <div className="space-y-2">
+          <h3 className="text-lg font-semibold">You have a stay to review!</h3>
+          {eligibleBookings.map((booking) => (
+            <ReviewForm
+              key={booking.id}
+              propertyId={propertyId}
+              bookingId={booking.id}
+              onReviewSubmitted={handleReviewSubmitted}
+            />
+          ))}
+        </div>
+      )}
+
       {reviews.length > 0 ? (
         <ReviewScoreBreakdown
           categories={scoreCategories}

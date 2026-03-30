@@ -12,6 +12,7 @@ import FavoriteButton from "@/components/FavoriteButton";
 import ImageGallery from "@/components/ImageGallery";
 import CurrencyConverter from "@/components/CurrencyConverter";
 import WhatsAppButton from "@/components/WhatsAppButton";
+import { useTrackPropertyView } from "@/hooks/usePropertyViews";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -94,6 +95,8 @@ const PropertyDetails = () => {
   const [loyaltyDiscount, setLoyaltyDiscount] = useState<number>(0);
   const isHotelType = property ? ["hotel", "guesthouse", "resort", "motel"].includes(property.property_type) : false;
   const childFreeAge = property?.child_free_age || 10;
+
+  useTrackPropertyView(id);
 
   useEffect(() => {
     if (id) {
