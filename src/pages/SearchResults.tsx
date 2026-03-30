@@ -213,8 +213,8 @@ const SearchResults = () => {
                       title={property.title}
                       location={property.location}
                       price={property.price_per_night}
-                      rating={4.5}
-                      reviews={0}
+                      rating={property.avg_rating || 0}
+                      reviews={property.review_count || 0}
                       type={property.property_type}
                     />
                   ))}
