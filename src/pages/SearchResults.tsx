@@ -19,6 +19,8 @@ interface Property {
   max_guests: number;
   amenities: string[];
   created_at: string;
+  avg_rating?: number;
+  review_count?: number;
 }
 
 const SearchResults = () => {
@@ -76,9 +78,11 @@ const SearchResults = () => {
 
       if (checkIn && checkOut && data) {
         const availableProperties = await filterAvailableProperties(data, checkIn, checkOut);
-        setProperties(availableProperties);
+        const withReviews = await fetchReviewData(availableProperties);
+        setProperties(withReviews);
       } else {
-        setProperties(data || []);
+        const withReviews = await fetchReviewData(data || []);
+        setProperties(withReviews);
       }
     } catch (error: any) {
       console.error("Error searching properties:", error);
@@ -86,6 +90,28 @@ const SearchResults = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchReviewData = async (props: Property[]): Promise<Property[]> => {
+    if (props.length === 0) return props;
+    const ids = props.map(p => p.id);
+    const { data: reviews } = await supabase
+      .from("reviews")
+      .select("property_id, rating")
+      .in("property_id", ids);
+
+    const ratingMap: Record<string, { sum: number; count: number }> = {};
+    reviews?.forEach(r => {
+      if (!ratingMap[r.property_id]) ratingMap[r.property_id] = { sum: 0, count: 0 };
+      ratingMap[r.property_id].sum += r.rating;
+      ratingMap[r.property_id].count++;
+    });
+
+    return props.map(p => ({
+      ...p,
+      avg_rating: ratingMap[p.id] ? ratingMap[p.id].sum / ratingMap[p.id].count : 0,
+      review_count: ratingMap[p.id]?.count || 0,
+    }));
   };
 
   const applyFilters = () => {
@@ -187,8 +213,8 @@ const SearchResults = () => {
                       title={property.title}
                       location={property.location}
                       price={property.price_per_night}
-                      rating={4.5}
-                      reviews={0}
+                      rating={property.avg_rating || 0}
+                      reviews={property.review_count || 0}
                       type={property.property_type}
                     />
                   ))}

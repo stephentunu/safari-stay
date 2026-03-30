@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Star } from "lucide-react";
 import { format } from "date-fns";
 import ReviewScoreBreakdown from "@/components/ReviewScoreBreakdown";
+import ReviewForm from "@/components/ReviewForm";
 
 interface Review {
   id: string;
@@ -19,6 +20,11 @@ interface Review {
   facilities_score: number | null;
 }
 
+interface EligibleBooking {
+  id: string;
+  check_out_date: string;
+}
+
 interface PropertyReviewsProps {
   propertyId: string;
 }
@@ -26,9 +32,11 @@ interface PropertyReviewsProps {
 const PropertyReviews = ({ propertyId }: PropertyReviewsProps) => {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
+  const [eligibleBookings, setEligibleBookings] = useState<EligibleBooking[]>([]);
 
   useEffect(() => {
     fetchReviews();
+    fetchEligibleBookings();
   }, [propertyId]);
 
   const fetchReviews = async () => {
@@ -66,6 +74,35 @@ const PropertyReviews = ({ propertyId }: PropertyReviewsProps) => {
     }
   };
 
+  const fetchEligibleBookings = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Get completed bookings that haven't been reviewed yet
+      const { data: bookings } = await supabase
+        .from("bookings")
+        .select("id, check_out_date")
+        .eq("property_id", propertyId)
+        .eq("traveler_id", user.id)
+        .eq("status", "completed");
+
+      if (!bookings || bookings.length === 0) return;
+
+      // Check which bookings already have reviews
+      const { data: existingReviews } = await supabase
+        .from("reviews")
+        .select("booking_id")
+        .eq("property_id", propertyId)
+        .eq("reviewer_id", user.id);
+
+      const reviewedBookingIds = new Set(existingReviews?.map(r => r.booking_id) || []);
+      setEligibleBookings(bookings.filter(b => !reviewedBookingIds.has(b.id)));
+    } catch (error) {
+      console.error("Error checking eligible bookings:", error);
+    }
+  };
+
   const averageRating = reviews.length > 0
     ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
     : 0;
@@ -84,6 +121,11 @@ const PropertyReviews = ({ propertyId }: PropertyReviewsProps) => {
     { label: "Facilities", score: getScoreAverage("facilities_score") },
   ];
 
+  const handleReviewSubmitted = () => {
+    fetchReviews();
+    fetchEligibleBookings();
+  };
+
   if (loading) {
     return <div className="text-muted-foreground">Loading reviews...</div>;
   }
@@ -91,6 +133,20 @@ const PropertyReviews = ({ propertyId }: PropertyReviewsProps) => {
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold">Guest Reviews</h2>
+
+      {eligibleBookings.length > 0 && (
+        <div className="space-y-2">
+          <h3 className="text-lg font-semibold">You have a stay to review!</h3>
+          {eligibleBookings.map((booking) => (
+            <ReviewForm
+              key={booking.id}
+              propertyId={propertyId}
+              bookingId={booking.id}
+              onReviewSubmitted={handleReviewSubmitted}
+            />
+          ))}
+        </div>
+      )}
 
       {reviews.length > 0 ? (
         <ReviewScoreBreakdown
