@@ -92,6 +92,28 @@ const SearchResults = () => {
     }
   };
 
+  const fetchReviewData = async (props: Property[]): Promise<Property[]> => {
+    if (props.length === 0) return props;
+    const ids = props.map(p => p.id);
+    const { data: reviews } = await supabase
+      .from("reviews")
+      .select("property_id, rating")
+      .in("property_id", ids);
+
+    const ratingMap: Record<string, { sum: number; count: number }> = {};
+    reviews?.forEach(r => {
+      if (!ratingMap[r.property_id]) ratingMap[r.property_id] = { sum: 0, count: 0 };
+      ratingMap[r.property_id].sum += r.rating;
+      ratingMap[r.property_id].count++;
+    });
+
+    return props.map(p => ({
+      ...p,
+      avg_rating: ratingMap[p.id] ? ratingMap[p.id].sum / ratingMap[p.id].count : 0,
+      review_count: ratingMap[p.id]?.count || 0,
+    }));
+  };
+
   const applyFilters = () => {
     let filtered = [...properties];
 
