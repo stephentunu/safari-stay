@@ -74,6 +74,35 @@ const PropertyReviews = ({ propertyId }: PropertyReviewsProps) => {
     }
   };
 
+  const fetchEligibleBookings = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Get completed bookings that haven't been reviewed yet
+      const { data: bookings } = await supabase
+        .from("bookings")
+        .select("id, check_out_date")
+        .eq("property_id", propertyId)
+        .eq("traveler_id", user.id)
+        .eq("status", "completed");
+
+      if (!bookings || bookings.length === 0) return;
+
+      // Check which bookings already have reviews
+      const { data: existingReviews } = await supabase
+        .from("reviews")
+        .select("booking_id")
+        .eq("property_id", propertyId)
+        .eq("reviewer_id", user.id);
+
+      const reviewedBookingIds = new Set(existingReviews?.map(r => r.booking_id) || []);
+      setEligibleBookings(bookings.filter(b => !reviewedBookingIds.has(b.id)));
+    } catch (error) {
+      console.error("Error checking eligible bookings:", error);
+    }
+  };
+
   const averageRating = reviews.length > 0
     ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
     : 0;
@@ -91,6 +120,11 @@ const PropertyReviews = ({ propertyId }: PropertyReviewsProps) => {
     { label: "Service", score: getScoreAverage("service_score") },
     { label: "Facilities", score: getScoreAverage("facilities_score") },
   ];
+
+  const handleReviewSubmitted = () => {
+    fetchReviews();
+    fetchEligibleBookings();
+  };
 
   if (loading) {
     return <div className="text-muted-foreground">Loading reviews...</div>;
