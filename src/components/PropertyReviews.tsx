@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Star } from "lucide-react";
 import { format } from "date-fns";
 import ReviewScoreBreakdown from "@/components/ReviewScoreBreakdown";
+import ReviewForm from "@/components/ReviewForm";
 
 interface Review {
   id: string;
@@ -19,6 +20,11 @@ interface Review {
   facilities_score: number | null;
 }
 
+interface EligibleBooking {
+  id: string;
+  check_out_date: string;
+}
+
 interface PropertyReviewsProps {
   propertyId: string;
 }
@@ -26,6 +32,7 @@ interface PropertyReviewsProps {
 const PropertyReviews = ({ propertyId }: PropertyReviewsProps) => {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
+  const [eligibleBookings, setEligibleBookings] = useState<EligibleBooking[]>([]);
 
   useEffect(() => {
     fetchReviews();
