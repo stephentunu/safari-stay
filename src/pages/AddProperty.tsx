@@ -907,6 +907,20 @@ const AddProperty = () => {
                 </div>
               )}
 
+              {/* Virtual Tour Video URL */}
+              <div className="space-y-2">
+                <Label>Virtual Tour / Video URL (Optional)</Label>
+                <Input
+                  type="url"
+                  value={videoUrl}
+                  onChange={(e) => setVideoUrl(e.target.value)}
+                  placeholder="https://www.youtube.com/watch?v=... or direct video URL"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Add a YouTube link or direct video URL for a virtual property tour
+                </p>
+              </div>
+
               <div className="space-y-2">
                 <Label>{t("property.images")} * (Max 10 - Label each room/area)</Label>
                 <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
