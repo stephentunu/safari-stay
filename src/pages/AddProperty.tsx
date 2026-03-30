@@ -107,6 +107,7 @@ const AddProperty = () => {
   const [attractionDetails, setAttractionDetails] = useState<Record<string, string>>({});
   const [customBoardTypes, setCustomBoardTypes] = useState<CustomBoardType[]>([]);
   const [propertyRules, setPropertyRules] = useState<string[]>([]);
+  const [videoUrl, setVideoUrl] = useState<string>("");
   
   const [formData, setFormData] = useState<PropertyFormData>({
     title: "",
@@ -402,6 +403,7 @@ const AddProperty = () => {
         attraction_details: attractionDetails,
         custom_board_types: customBoardTypes,
         property_rules: propertyRules,
+        video_url: videoUrl || null,
       };
 
       const { data: property, error: propertyError } = await supabase
