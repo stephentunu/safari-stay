@@ -36,6 +36,7 @@ const PropertyReviews = ({ propertyId }: PropertyReviewsProps) => {
 
   useEffect(() => {
     fetchReviews();
+    fetchEligibleBookings();
   }, [propertyId]);
 
   const fetchReviews = async () => {
