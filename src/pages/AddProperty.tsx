@@ -107,6 +107,7 @@ const AddProperty = () => {
   const [attractionDetails, setAttractionDetails] = useState<Record<string, string>>({});
   const [customBoardTypes, setCustomBoardTypes] = useState<CustomBoardType[]>([]);
   const [propertyRules, setPropertyRules] = useState<string[]>([]);
+  const [videoUrl, setVideoUrl] = useState<string>("");
   
   const [formData, setFormData] = useState<PropertyFormData>({
     title: "",
@@ -402,6 +403,7 @@ const AddProperty = () => {
         attraction_details: attractionDetails,
         custom_board_types: customBoardTypes,
         property_rules: propertyRules,
+        video_url: videoUrl || null,
       };
 
       const { data: property, error: propertyError } = await supabase
@@ -904,6 +906,20 @@ const AddProperty = () => {
                   </div>
                 </div>
               )}
+
+              {/* Virtual Tour Video URL */}
+              <div className="space-y-2">
+                <Label>Virtual Tour / Video URL (Optional)</Label>
+                <Input
+                  type="url"
+                  value={videoUrl}
+                  onChange={(e) => setVideoUrl(e.target.value)}
+                  placeholder="https://www.youtube.com/watch?v=... or direct video URL"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Add a YouTube link or direct video URL for a virtual property tour
+                </p>
+              </div>
 
               <div className="space-y-2">
                 <Label>{t("property.images")} * (Max 10 - Label each room/area)</Label>

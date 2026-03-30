@@ -23,7 +23,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MapPin, Users, BedDouble, Bath, Star, Wifi, Coffee, CarFront, Shield, Calendar as CalendarIcon, Utensils, Briefcase, CreditCard, Smartphone, Navigation, Landmark, Car, Bed, UtensilsCrossed, Gift } from "lucide-react";
+import { MapPin, Users, BedDouble, Bath, Star, Wifi, Coffee, CarFront, Shield, Calendar as CalendarIcon, Utensils, Briefcase, CreditCard, Smartphone, Navigation, Landmark, Car, Bed, UtensilsCrossed, Gift, Video } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 import { BOARD_TYPES, ROOM_CATEGORIES, BED_TYPES } from "@/data/propertyOptions";
 
@@ -62,6 +62,7 @@ interface Property {
   attraction_details?: Record<string, string>;
   custom_board_types?: CustomBoardType[];
   property_rules?: string[];
+  video_url?: string;
 }
 
 interface CustomBoardType {
@@ -674,6 +675,34 @@ const PropertyDetails = () => {
                       </div>
                     </div>
                   ))}
+                </div>
+              </div>
+            )}
+
+            {/* Virtual Tour / Video */}
+            {property.video_url && (
+              <div>
+                <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                  <Video className="h-5 w-5" />
+                  Virtual Tour
+                </h2>
+                <div className="aspect-video rounded-lg overflow-hidden bg-muted">
+                  {property.video_url.includes("youtube.com") || property.video_url.includes("youtu.be") ? (
+                    <iframe
+                      src={property.video_url.replace("watch?v=", "embed/").replace("youtu.be/", "youtube.com/embed/")}
+                      className="w-full h-full"
+                      allowFullScreen
+                      title="Virtual Tour"
+                    />
+                  ) : (
+                    <video
+                      src={property.video_url}
+                      controls
+                      className="w-full h-full object-cover"
+                    >
+                      Your browser does not support video playback.
+                    </video>
+                  )}
                 </div>
               </div>
             )}

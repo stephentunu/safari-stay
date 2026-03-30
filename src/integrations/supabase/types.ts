@@ -371,6 +371,7 @@ export type Database = {
           title: string
           transport_modes: string[] | null
           updated_at: string
+          video_url: string | null
         }
         Insert: {
           address: string
@@ -405,6 +406,7 @@ export type Database = {
           title: string
           transport_modes?: string[] | null
           updated_at?: string
+          video_url?: string | null
         }
         Update: {
           address?: string
@@ -439,6 +441,7 @@ export type Database = {
           title?: string
           transport_modes?: string[] | null
           updated_at?: string
+          video_url?: string | null
         }
         Relationships: [
           {
