@@ -5,13 +5,19 @@ export const BOARD_TYPES = [
   { value: "standard", label: "Standard (Supper Only)" },
 ];
 
-// Room Categories with sub-types
-export const ROOM_CATEGORIES = [
-  { value: "junior_executive_deluxe", label: "Junior Executive Deluxe", tier: "Executive" },
-  { value: "executive_standard", label: "Executive Standard", tier: "Executive" },
-  { value: "superior_deluxe", label: "Superior Deluxe", tier: "Executive" },
-  { value: "standard", label: "Standard Room", tier: "Standard" },
-  { value: "economy", label: "Economy Room", tier: "Economy" },
+// Room Categories - now dynamic per property (see CustomRoomCategoryInput)
+// Kept as suggested defaults for reference
+export const ROOM_CATEGORY_SUGGESTIONS = [
+  "Junior Executive Deluxe",
+  "Executive Standard",
+  "Superior Deluxe",
+  "Standard Room",
+  "Economy Room",
+  "Presidential Suite",
+  "Penthouse",
+  "Family Room",
+  "Studio",
+  "Cottage",
 ];
 
 // Bed Types
