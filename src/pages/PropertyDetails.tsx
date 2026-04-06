@@ -50,7 +50,7 @@ interface Property {
   longitude?: number;
   property_type: string;
   board_type?: string;
-  room_categories?: RoomCategoryPrice[];
+  room_categories?: RoomCategory[];
   bed_types?: string[];
   child_free_age?: number;
   attraction_details?: Record<string, string>;
@@ -458,7 +458,8 @@ const PropertyDetails = () => {
   };
 
   const getRoomCategoryLabel = (value: string) => {
-    return ROOM_CATEGORIES.find(r => r.value === value)?.label || value;
+    const room = property?.room_categories?.find(r => r.id === value);
+    return room?.name || value;
   };
 
   const getBedTypeLabel = (value: string) => {
