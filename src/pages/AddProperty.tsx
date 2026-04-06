@@ -16,9 +16,10 @@ import { Loader2, Upload, X, MapPin, Car, Bed, UtensilsCrossed } from "lucide-re
 import { z } from "zod";
 import { KENYA_COUNTIES } from "@/data/kenyaLocations";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { NEARBY_ATTRACTIONS, TRANSPORT_MODES, IMAGE_LABELS, PROPERTY_TYPES, BOARD_TYPES, ROOM_CATEGORIES, BED_TYPES } from "@/data/propertyOptions";
+import { NEARBY_ATTRACTIONS, TRANSPORT_MODES, IMAGE_LABELS, PROPERTY_TYPES, BOARD_TYPES, BED_TYPES } from "@/data/propertyOptions";
 import AttractionNameInput from "@/components/property/AttractionNameInput";
 import CustomBoardTypeInput from "@/components/property/CustomBoardTypeInput";
+import CustomRoomCategoryInput, { type RoomCategory } from "@/components/property/CustomRoomCategoryInput";
 import PropertyRulesInput from "@/components/property/PropertyRulesInput";
 
 const propertySchema = z.object({
@@ -36,12 +37,7 @@ const propertySchema = z.object({
 
 type PropertyFormData = z.infer<typeof propertySchema>;
 
-interface RoomCategoryPrice {
-  category: string;
-  label: string;
-  single_price: number;
-  double_price: number;
-}
+// RoomCategory is now imported from CustomRoomCategoryInput
 
 interface CustomBoardType {
   id: string;
@@ -100,8 +96,7 @@ const AddProperty = () => {
   // New states for room/board configuration
   const [boardType, setBoardType] = useState<string>("standard");
   const [selectedBedTypes, setSelectedBedTypes] = useState<string[]>([]);
-  const [roomCategoryPrices, setRoomCategoryPrices] = useState<RoomCategoryPrice[]>([]);
-  const [enableRoomCategories, setEnableRoomCategories] = useState(false);
+  const [roomCategories, setRoomCategories] = useState<RoomCategory[]>([]);
   
   // New states for attraction names, custom board types, and property rules
   const [attractionDetails, setAttractionDetails] = useState<Record<string, string>>({});
@@ -176,19 +171,21 @@ const AddProperty = () => {
     }
   }, [user, toast]);
 
-  // Initialize room category prices when enabling
-  useEffect(() => {
-    if (enableRoomCategories && roomCategoryPrices.length === 0) {
-      setRoomCategoryPrices(
-        ROOM_CATEGORIES.map(cat => ({
-          category: cat.value,
-          label: cat.label,
-          single_price: formData.price_per_night || 0,
-          double_price: Math.round((formData.price_per_night || 0) * 1.5),
-        }))
-      );
-    }
-  }, [enableRoomCategories, formData.price_per_night]);
+  const addRoomCategory = (category: RoomCategory) => {
+    setRoomCategories(prev => [...prev, category]);
+  };
+
+  const removeRoomCategory = (id: string) => {
+    setRoomCategories(prev => prev.filter(rc => rc.id !== id));
+  };
+
+  const updateRoomCategoryPrice = (id: string, bedType: string, price: number) => {
+    setRoomCategories(prev =>
+      prev.map(rc =>
+        rc.id === id ? { ...rc, prices: { ...rc.prices, [bedType]: price } } : rc
+      )
+    );
+  };
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -298,15 +295,6 @@ const AddProperty = () => {
     );
   };
 
-  const updateRoomCategoryPrice = (category: string, field: 'single_price' | 'double_price', value: number) => {
-    setRoomCategoryPrices(prev => 
-      prev.map(rcp => 
-        rcp.category === category 
-          ? { ...rcp, [field]: value }
-          : rcp
-      )
-    );
-  };
 
   const updateImageLabel = (index: number, label: string) => {
     setImageLabels(prev => {
@@ -375,8 +363,8 @@ const AddProperty = () => {
       }
 
       // Prepare room categories for storage
-      const roomCategoriesData = enableRoomCategories && isHotelType
-        ? roomCategoryPrices.filter(rcp => rcp.single_price > 0 || rcp.double_price > 0)
+      const roomCategoriesData = isHotelType && roomCategories.length > 0
+        ? roomCategories.filter(rc => Object.values(rc.prices).some(p => p > 0))
         : [];
 
       const insertData: Record<string, any> = {
@@ -786,55 +774,13 @@ const AddProperty = () => {
                   </div>
 
                   {/* Room Categories with Pricing */}
-                  <div className="space-y-3">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="enableRoomCategories" 
-                        checked={enableRoomCategories}
-                        onCheckedChange={(checked) => setEnableRoomCategories(checked as boolean)}
-                      />
-                      <Label htmlFor="enableRoomCategories" className="cursor-pointer">
-                        Enable Room Categories with Different Pricing
-                      </Label>
-                    </div>
-
-                    {enableRoomCategories && (
-                      <div className="space-y-3 mt-4">
-                        <p className="text-sm text-muted-foreground">
-                          Set prices for each room category and bed type combination (KES per night)
-                        </p>
-                        <div className="grid gap-3">
-                          {roomCategoryPrices.map((rcp) => (
-                            <div key={rcp.category} className="grid grid-cols-3 gap-2 items-center p-3 border rounded-lg">
-                              <div className="font-medium text-sm">{rcp.label}</div>
-                              <div className="space-y-1">
-                                <Label className="text-xs text-muted-foreground">Single Bed</Label>
-                                <Input
-                                  type="number"
-                                  min="0"
-                                  value={rcp.single_price || ""}
-                                  onChange={(e) => updateRoomCategoryPrice(rcp.category, 'single_price', Number(e.target.value))}
-                                  placeholder="Single price"
-                                  className="h-8"
-                                />
-                              </div>
-                              <div className="space-y-1">
-                                <Label className="text-xs text-muted-foreground">Double Bed</Label>
-                                <Input
-                                  type="number"
-                                  min="0"
-                                  value={rcp.double_price || ""}
-                                  onChange={(e) => updateRoomCategoryPrice(rcp.category, 'double_price', Number(e.target.value))}
-                                  placeholder="Double price"
-                                  className="h-8"
-                                />
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                  <CustomRoomCategoryInput
+                    roomCategories={roomCategories}
+                    selectedBedTypes={selectedBedTypes}
+                    onAdd={addRoomCategory}
+                    onRemove={removeRoomCategory}
+                    onUpdatePrice={updateRoomCategoryPrice}
+                  />
 
                   {/* Custom Board Types */}
                   <CustomBoardTypeInput

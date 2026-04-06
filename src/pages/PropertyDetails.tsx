@@ -25,14 +25,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MapPin, Users, BedDouble, Bath, Star, Wifi, Coffee, CarFront, Shield, Calendar as CalendarIcon, Utensils, Briefcase, CreditCard, Smartphone, Navigation, Landmark, Car, Bed, UtensilsCrossed, Gift, Video } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
-import { BOARD_TYPES, ROOM_CATEGORIES, BED_TYPES } from "@/data/propertyOptions";
-
-interface RoomCategoryPrice {
-  category: string;
-  label: string;
-  single_price: number;
-  double_price: number;
-}
+import { BOARD_TYPES, BED_TYPES } from "@/data/propertyOptions";
+import { type RoomCategory } from "@/components/property/CustomRoomCategoryInput";
 
 interface Property {
   id: string;
@@ -56,7 +50,7 @@ interface Property {
   longitude?: number;
   property_type: string;
   board_type?: string;
-  room_categories?: RoomCategoryPrice[];
+  room_categories?: RoomCategory[];
   bed_types?: string[];
   child_free_age?: number;
   attraction_details?: Record<string, string>;
@@ -133,7 +127,7 @@ const PropertyDetails = () => {
         setSelectedBedType(property.bed_types[0]);
       }
       if (property.room_categories && property.room_categories.length > 0) {
-        setSelectedRoomCategory(property.room_categories[0].category);
+        setSelectedRoomCategory(property.room_categories[0].id);
       }
     }
   }, [property, isHotelType]);
@@ -376,13 +370,9 @@ const PropertyDetails = () => {
     
     // If room categories are enabled and selected
     if (isHotelType && property.room_categories && property.room_categories.length > 0 && selectedRoomCategory) {
-      const roomCat = property.room_categories.find(rc => rc.category === selectedRoomCategory);
-      if (roomCat) {
-        if (selectedBedType === "single") {
-          return roomCat.single_price || property.price_per_night;
-        } else if (selectedBedType === "double") {
-          return roomCat.double_price || property.price_per_night;
-        }
+      const roomCat = property.room_categories.find(rc => rc.id === selectedRoomCategory);
+      if (roomCat && selectedBedType && roomCat.prices[selectedBedType]) {
+        return roomCat.prices[selectedBedType];
       }
     }
     
@@ -464,7 +454,8 @@ const PropertyDetails = () => {
   };
 
   const getRoomCategoryLabel = (value: string) => {
-    return ROOM_CATEGORIES.find(r => r.value === value)?.label || value;
+    const room = property?.room_categories?.find(r => r.id === value);
+    return room?.name || value;
   };
 
   const getBedTypeLabel = (value: string) => {
@@ -664,13 +655,13 @@ const PropertyDetails = () => {
                 <div className="grid gap-3">
                   {property.room_categories.map((room, index) => (
                     <div key={index} className="p-4 border rounded-lg bg-muted/30">
-                      <h3 className="font-medium">{room.label}</h3>
-                      <div className="flex gap-4 mt-2 text-sm text-muted-foreground">
-                        {room.single_price > 0 && (
-                          <span>Single: KES {room.single_price.toLocaleString()}/night</span>
-                        )}
-                        {room.double_price > 0 && (
-                          <span>Double: KES {room.double_price.toLocaleString()}/night</span>
+                      <h3 className="font-medium">{room.name}</h3>
+                      <p className="text-xs text-muted-foreground capitalize mb-2">{room.tier} tier</p>
+                      <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                        {Object.entries(room.prices).map(([bedType, price]) => 
+                          price > 0 ? (
+                            <span key={bedType}>{getBedTypeLabel(bedType)}: KES {price.toLocaleString()}/night</span>
+                          ) : null
                         )}
                       </div>
                     </div>
@@ -835,8 +826,8 @@ const PropertyDetails = () => {
                           </SelectTrigger>
                           <SelectContent className="bg-popover z-50">
                             {property.room_categories.map((room) => (
-                              <SelectItem key={room.category} value={room.category}>
-                                {room.label}
+                              <SelectItem key={room.id} value={room.id}>
+                                {room.name} <span className="text-xs text-muted-foreground capitalize">({room.tier})</span>
                               </SelectItem>
                             ))}
                           </SelectContent>
