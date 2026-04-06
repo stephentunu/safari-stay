@@ -295,15 +295,6 @@ const AddProperty = () => {
     );
   };
 
-  const updateRoomCategoryPrice = (category: string, field: 'single_price' | 'double_price', value: number) => {
-    setRoomCategoryPrices(prev => 
-      prev.map(rcp => 
-        rcp.category === category 
-          ? { ...rcp, [field]: value }
-          : rcp
-      )
-    );
-  };
 
   const updateImageLabel = (index: number, label: string) => {
     setImageLabels(prev => {
@@ -372,8 +363,8 @@ const AddProperty = () => {
       }
 
       // Prepare room categories for storage
-      const roomCategoriesData = enableRoomCategories && isHotelType
-        ? roomCategoryPrices.filter(rcp => rcp.single_price > 0 || rcp.double_price > 0)
+      const roomCategoriesData = isHotelType && roomCategories.length > 0
+        ? roomCategories.filter(rc => Object.values(rc.prices).some(p => p > 0))
         : [];
 
       const insertData: Record<string, any> = {
@@ -783,55 +774,13 @@ const AddProperty = () => {
                   </div>
 
                   {/* Room Categories with Pricing */}
-                  <div className="space-y-3">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="enableRoomCategories" 
-                        checked={enableRoomCategories}
-                        onCheckedChange={(checked) => setEnableRoomCategories(checked as boolean)}
-                      />
-                      <Label htmlFor="enableRoomCategories" className="cursor-pointer">
-                        Enable Room Categories with Different Pricing
-                      </Label>
-                    </div>
-
-                    {enableRoomCategories && (
-                      <div className="space-y-3 mt-4">
-                        <p className="text-sm text-muted-foreground">
-                          Set prices for each room category and bed type combination (KES per night)
-                        </p>
-                        <div className="grid gap-3">
-                          {roomCategoryPrices.map((rcp) => (
-                            <div key={rcp.category} className="grid grid-cols-3 gap-2 items-center p-3 border rounded-lg">
-                              <div className="font-medium text-sm">{rcp.label}</div>
-                              <div className="space-y-1">
-                                <Label className="text-xs text-muted-foreground">Single Bed</Label>
-                                <Input
-                                  type="number"
-                                  min="0"
-                                  value={rcp.single_price || ""}
-                                  onChange={(e) => updateRoomCategoryPrice(rcp.category, 'single_price', Number(e.target.value))}
-                                  placeholder="Single price"
-                                  className="h-8"
-                                />
-                              </div>
-                              <div className="space-y-1">
-                                <Label className="text-xs text-muted-foreground">Double Bed</Label>
-                                <Input
-                                  type="number"
-                                  min="0"
-                                  value={rcp.double_price || ""}
-                                  onChange={(e) => updateRoomCategoryPrice(rcp.category, 'double_price', Number(e.target.value))}
-                                  placeholder="Double price"
-                                  className="h-8"
-                                />
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                  <CustomRoomCategoryInput
+                    roomCategories={roomCategories}
+                    selectedBedTypes={selectedBedTypes}
+                    onAdd={addRoomCategory}
+                    onRemove={removeRoomCategory}
+                    onUpdatePrice={updateRoomCategoryPrice}
+                  />
 
                   {/* Custom Board Types */}
                   <CustomBoardTypeInput
