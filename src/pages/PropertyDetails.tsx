@@ -25,14 +25,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MapPin, Users, BedDouble, Bath, Star, Wifi, Coffee, CarFront, Shield, Calendar as CalendarIcon, Utensils, Briefcase, CreditCard, Smartphone, Navigation, Landmark, Car, Bed, UtensilsCrossed, Gift, Video } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
-import { BOARD_TYPES, ROOM_CATEGORIES, BED_TYPES } from "@/data/propertyOptions";
-
-interface RoomCategoryPrice {
-  category: string;
-  label: string;
-  single_price: number;
-  double_price: number;
-}
+import { BOARD_TYPES, BED_TYPES } from "@/data/propertyOptions";
+import { type RoomCategory } from "@/components/property/CustomRoomCategoryInput";
 
 interface Property {
   id: string;
