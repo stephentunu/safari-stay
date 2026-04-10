@@ -60,7 +60,7 @@ const SearchBar = ({ onSearch }: SearchBarProps = {}) => {
         <Search className="h-5 w-5 text-primary shrink-0 ml-2" />
         <Input
           type="text"
-          placeholder="Search properties..."
+          placeholder="Search by name, location or price range"
           value={keyword}
           onChange={(e) => setKeyword(e.target.value)}
           onKeyDown={handleKeyDown}
